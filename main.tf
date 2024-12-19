@@ -3,9 +3,22 @@ provider "azurerm" {
   subscription_id = var.subscription_id
 }
 
+terraform {
+  required_providers {
+    databricks = {
+      source  = "databricks/databricks"
+      version = "~> 1.11.0"
+    }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 3.64.0"
+    }
+  }
+}
+
 # Resource Group
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-vnet-project"   # Старое имя ресурсной группы
+  name     = "rg-vnet-project"   
   location = "West Europe"
 
   lifecycle {
@@ -15,7 +28,7 @@ resource "azurerm_resource_group" "rg" {
 
 # Virtual Network
 resource "azurerm_virtual_network" "vnet" {
-  name                = "VNet-Project"   # Старое имя VNet
+  name                = "VNet-Project"   
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -39,7 +52,7 @@ resource "azurerm_subnet" "public" {
 
 # Private Subnet
 resource "azurerm_subnet" "private" {
-  name                 = "Private-Subnet"  # Старое имя Private Subnet
+  name                 = "Private-Subnet"  
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.2.0/24"]
@@ -49,9 +62,19 @@ resource "azurerm_subnet" "private" {
   }
 }
 
+# Databricks Subnet
+resource "azurerm_subnet" "databricks" {
+  name                 = "Databricks-Subnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.4.0/24"]
+
+  private_endpoint_network_policies = "Disabled"
+}
+
 # Public IP for NAT Gateway
 resource "azurerm_public_ip" "nat_gateway_ip" {
-  name                = "nat-gateway-ip"  # Старое имя Public IP
+  name                = "nat-gateway-ip"  
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   allocation_method   = "Static"
@@ -60,7 +83,7 @@ resource "azurerm_public_ip" "nat_gateway_ip" {
 
 # NAT Gateway
 resource "azurerm_nat_gateway" "nat_gateway" {
-  name                = "nat-gateway"   # Старое имя NAT Gateway
+  name                = "nat-gateway"   
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   sku_name            = "Standard"
@@ -75,6 +98,12 @@ resource "azurerm_nat_gateway_public_ip_association" "nat_gateway_assoc" {
 # Attach NAT Gateway to Private Subnet
 resource "azurerm_subnet_nat_gateway_association" "private_nat_assoc" {
   subnet_id      = azurerm_subnet.private.id
+  nat_gateway_id = azurerm_nat_gateway.nat_gateway.id
+}
+
+# Attach NAT Gateway to Databricks Subnet
+resource "azurerm_subnet_nat_gateway_association" "databricks_nat_assoc" {
+  subnet_id      = azurerm_subnet.databricks.id
   nat_gateway_id = azurerm_nat_gateway.nat_gateway.id
 }
 
@@ -273,3 +302,4 @@ resource "azurerm_linux_virtual_machine" "private_vm" {
     prevent_destroy = true
   }
 }
+

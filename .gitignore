@@ -16,3 +16,5 @@ terraform.tfvars
 
 # Ignore any other unnecessary files
 .terraform.lock.hclterraform.tfstate*
+
+azure_access_token.txt
