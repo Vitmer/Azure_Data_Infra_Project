@@ -1,5 +1,6 @@
 provider "databricks" {
   azure_workspace_resource_id = azurerm_databricks_workspace.example.id
+}
 
 resource "azurerm_databricks_workspace" "example" {
   name                = "databricks-workspace"
@@ -67,21 +68,81 @@ resource "azurerm_data_factory_pipeline" "example" {
 
 resource "databricks_cluster" "example" {
   cluster_name  = "example-cluster"
-  spark_version = "7.3.x-scala2.12"
-  node_type_id  = "Standard_D3_v2"
-  num_workers   = 2
+  spark_version = "11.3.x-scala2.12"
+  node_type_id  = "Standard_DS3_v2"
+  autoscale {
+    min_workers = 2
+    max_workers = 8
+  }
 }
 
 resource "databricks_job" "example" {
   name = "example-job"
+
   new_cluster {
-    cluster_name  = "example-cluster"
-    spark_version = "7.3.x-scala2.12"
-    node_type_id  = "Standard_D3_v2"
-    num_workers   = 2
+    spark_version = "11.3.x-scala2.12"
+    node_type_id  = "Standard_DS3_v2"
+    autoscale {
+      min_workers = 2
+      max_workers = 8
+    }
   }
+
   notebook_task {
-    notebook_path = "/Users/your_user_name@example.com/your_notebook"
+    notebook_path = "/Users/example@databricks.com/ExampleNotebook"
+  }
+}
+
+# Data Factory Pipeline with ETL Configuration
+resource "azurerm_data_factory_pipeline" "etl_pipeline" {
+  name            = "etl-pipeline"
+  data_factory_id = azurerm_data_factory.example.id
+
+  activities_json = jsonencode([
+    {
+      "name": "CopyRawToDataLake",
+      "type": "Copy",
+      "inputs": [
+        {
+          "name": azurerm_data_factory_dataset_azure_blob.example.name
+        }
+      ],
+      "outputs": [
+        {
+          "name": "cleaned-data-dataset"
+        }
+      ]
+    },
+    {
+      "name": "TransformData",
+      "type": "DatabricksNotebook",
+      "inputs": [
+        {
+          "name": "cleaned-data-dataset"
+        }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Users/example@databricks.com/ETLNotebook"
+      }
+    }
+  ])
+}
+
+# Databricks Job for ETL Processing
+resource "databricks_job" "etl_job" {
+  name = "etl-job"
+
+  new_cluster {
+    spark_version = "11.3.x-scala2.12"
+    node_type_id  = "Standard_DS3_v2"
+    autoscale {
+      min_workers = 2
+      max_workers = 8
+    }
+  }
+
+  notebook_task {
+    notebook_path = "/Users/example@databricks.com/ETLNotebook"
   }
 }
 

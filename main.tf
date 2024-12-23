@@ -298,8 +298,48 @@ resource "azurerm_linux_virtual_machine" "private_vm" {
     version   = "latest"
   }
 
-  lifecycle {
+ lifecycle {
     prevent_destroy = true
   }
 }
 
+# Backup Vault for Automatic Backups
+resource "azurerm_recovery_services_vault" "backup_vault" {
+  name                = "backup-vault"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  sku = "Standard"
+}
+
+# Backup Policy for VMs
+resource "azurerm_backup_policy_vm" "vm_backup_policy" {
+  name                = "daily-backup-policy"
+  resource_group_name = azurerm_resource_group.rg.name
+  recovery_vault_name = azurerm_recovery_services_vault.backup_vault.name
+
+  backup {
+    frequency = "Daily"
+    time      = "23:00"
+  }
+
+  retention_daily {
+    count = 7
+  }
+}
+
+# Protect Public VM with Backup
+resource "azurerm_backup_protected_vm" "protected_vm_public" {
+  resource_group_name       = azurerm_resource_group.rg.name
+  recovery_vault_name       = azurerm_recovery_services_vault.backup_vault.name
+  source_vm_id              = azurerm_linux_virtual_machine.public_vm.id
+  backup_policy_id          = azurerm_backup_policy_vm.vm_backup_policy.id
+}
+
+# Protect Private VM with Backup
+resource "azurerm_backup_protected_vm" "protected_vm_private" {
+  resource_group_name       = azurerm_resource_group.rg.name
+  recovery_vault_name       = azurerm_recovery_services_vault.backup_vault.name
+  source_vm_id              = azurerm_linux_virtual_machine.private_vm.id
+  backup_policy_id          = azurerm_backup_policy_vm.vm_backup_policy.id
+}

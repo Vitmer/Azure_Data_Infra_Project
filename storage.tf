@@ -17,13 +17,9 @@ resource "azurerm_storage_account" "storage" {
 
 # Storage Container Example (optional)
 resource "azurerm_storage_container" "data_container" {
-  name                  = "datacontainer"
-  storage_account_name  = azurerm_storage_account.storage.name
+  name                  = "data-container"
+  storage_account_id    = azurerm_storage_account.storage.id
   container_access_type = "private"
-
-  lifecycle {
-    prevent_destroy = false  # Allow deletion of the storage container
-  }
 }
 
 # Storage Queue Example (optional)
@@ -57,4 +53,17 @@ resource "azurerm_storage_blob" "data_blob" {
   lifecycle {
     prevent_destroy = false  # Allow deletion of the storage blob
   }
+}
+
+# Assign RBAC Role to Principal for Storage Account
+resource "azurerm_role_assignment" "storage_account_rbac" {
+  principal_id         = var.rbac_principal_id
+  role_definition_name = "Storage Blob Data Contributor"
+  scope                = azurerm_storage_account.storage.id
+}
+
+resource "azurerm_role_assignment" "blob_contributor" {
+  principal_id         = var.rbac_principal_id
+  role_definition_name = "Storage Blob Data Contributor"
+  scope                = azurerm_storage_container.data_container.id
 }

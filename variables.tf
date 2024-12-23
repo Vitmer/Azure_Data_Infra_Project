@@ -47,25 +47,6 @@ variable "data_factory_name" {
   default     = "MerenicsDataFactory"
 }
 
-# Azure Client ID (for Databricks Provider)
-variable "azure_client_id" {
-  description = "Azure Client ID for Databricks API authentication"
-  type        = string
-}
-
-# Azure Client Secret (for Databricks Provider)
-variable "azure_client_secret" {
-  description = "Azure Client Secret for Databricks API authentication"
-  type        = string
-  sensitive   = true
-}
-
-# Azure Tenant ID (for Databricks Provider)
-variable "azure_tenant_id" {
-  description = "Azure Tenant ID for Databricks API authentication"
-  type        = string
-}
-
 # Additional Databricks Configuration
 variable "databricks_sku" {
   description = "SKU for Databricks workspace (e.g., 'standard' or 'premium')"
@@ -85,5 +66,22 @@ variable "vnet_address_space" {
   description = "Address space for the Virtual Network"
   type        = list(string)
   default     = ["10.0.0.0/16"]
+}
+
+variable "azure_workspace_resource_id" {
+  description = "Resource ID of the Azure Databricks Workspace"
+  type        = string
+}
+
+variable "rbac_principal_id" {
+  description = "The principal ID for RBAC assignments"
+  type        = string
+}
+
+# Переменная для SQL пароля
+variable "synapse_sql_password" {
+  description = "Password for Synapse SQL administrator"
+  type        = string
+  sensitive   = true
 }
 
