@@ -22,3 +22,7 @@ azure_access_token.txt
 terraform.tfstate
 terraform.tfstate.*
 *.backup
+
+*.tfstate
+*.backup
+terraform.tfvars
