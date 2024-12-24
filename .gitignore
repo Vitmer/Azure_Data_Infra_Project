@@ -18,3 +18,7 @@ terraform.tfvars
 .terraform.lock.hclterraform.tfstate*
 
 azure_access_token.txt
+
+terraform.tfstate
+terraform.tfstate.*
+*.backup
