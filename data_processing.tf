@@ -39,7 +39,7 @@ resource "azurerm_data_factory_pipeline" "etl_pipeline" {
 
 # 26. Databricks ETL Pipeline
 resource "azurerm_data_factory_pipeline" "databricks_etl" {
-depends_on = [
+  depends_on = [
     azurerm_data_factory_dataset_azure_blob.example,
     azurerm_data_factory_dataset_sql_server_table.synapse_dataset
   ]
@@ -107,24 +107,37 @@ resource "azurerm_databricks_workspace" "example" {
   }
 }
 
-# Local variable for using Workspace ID
-locals {
-  databricks_workspace_id = azurerm_databricks_workspace.example.id
+# Output Databricks Workspace URL
+output "databricks_host" {
+  value = azurerm_databricks_workspace.example.workspace_url
+}
+
+# Provider configuration for Databricks with AAD authentication
+provider "databricks" {
+  host                        = azurerm_databricks_workspace.example.workspace_url
+  azure_workspace_resource_id = azurerm_databricks_workspace.example.id
 }
 
 # 37. Databricks Cluster
 resource "databricks_cluster" "example" {
-  depends_on = [azurerm_databricks_workspace.example]
-
   cluster_name  = "example-cluster"
   spark_version = "11.3.x-scala2.12"
   node_type_id  = "Standard_DS3_v2"
+
   autoscale {
     min_workers = 2
     max_workers = 8
   }
 }
 
+# Delay to ensure Databricks Workspace is ready
+resource "null_resource" "wait_for_databricks" {
+  depends_on = [azurerm_databricks_workspace.example]
+
+  provisioner "local-exec" {
+    command = "sleep 30"
+  }
+}
 # 38. Random Suffix for Unique Naming
 resource "random_string" "suffix_processing" {
   length  = 6

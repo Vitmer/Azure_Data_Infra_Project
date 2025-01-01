@@ -26,24 +26,29 @@ resource "azurerm_key_vault_access_policy" "terraform_access" {
   }
 }
 
-# 20. Synapse SQL Password Secret
+# 20. Random Password for Synapse SQL
 resource "random_password" "synapse_sql_password" {
   length  = 16
   special = true
   upper   = true
   lower   = true
-  number  = true
+  numeric  = true
 }
 
+# 21. Synapse SQL Password Secret
 resource "azurerm_key_vault_secret" "synapse_sql_password" {
   depends_on = [azurerm_key_vault_access_policy.terraform_access]
 
   name         = "synapse-sql-password"
   value        = random_password.synapse_sql_password.result
   key_vault_id = azurerm_key_vault.key_vault.id
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
-# 21. Additional Example Secret
+# 22. Example Secret
 resource "azurerm_key_vault_secret" "example_secret" {
   name         = "example-password"
   key_vault_id = azurerm_key_vault.key_vault.id
@@ -54,30 +59,8 @@ resource "azurerm_key_vault_secret" "example_secret" {
   }
 }
 
-# 51. Role Assignment for Key Vault Reader
-resource "azurerm_role_assignment" "key_vault_reader" {
-  principal_id         = var.service_principal_id
-  role_definition_name = "Key Vault Reader"
-  scope                = azurerm_key_vault.key_vault.id
-
-  timeouts {
-    create = "10m"
-  }
+# 23. Output for Synapse Password
+output "synapse_sql_password" {
+  value     = random_password.synapse_sql_password.result
+  sensitive = true
 }
-
-# 52. Role Assignment for Databricks Admin
-resource "azurerm_role_assignment" "databricks_admin" {
-  principal_id         = var.service_principal_id
-  role_definition_name = "Databricks Admin"
-  scope                = azurerm_databricks_workspace.example.id
-
-  depends_on = [azurerm_databricks_workspace.example]
-}
-
-# 53. Role Assignment Contributor for Service Principal
-resource "azurerm_role_assignment" "example" {
-  principal_id         = var.service_principal_id
-  role_definition_name = "Contributor"
-  scope                = azurerm_resource_group.rg.id
-}
-

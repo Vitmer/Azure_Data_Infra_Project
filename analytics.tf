@@ -19,11 +19,11 @@ resource "azurerm_synapse_sql_pool" "sql_pool" {
   sku_name             = "DW100c"
 }
 
-# 35. RBAC for Synapse
-resource "azurerm_role_assignment" "synapse_rbac" {
-  principal_id         = var.service_principal_id  
-  role_definition_name = "Synapse Administrator"
-  scope                = azurerm_synapse_workspace.synapse_workspace.id
+# 35. Role Assignment Contributor for Service Principal
+resource "azurerm_role_assignment" "example" {
+  principal_id         = var.service_principal_id
+  role_definition_name = "Contributor"
+  scope                = azurerm_resource_group.rg.id
 }
 
 # 36. Linked Service for Synapse in Data Factory
