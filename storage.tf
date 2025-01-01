@@ -1,48 +1,37 @@
-# Storage Account
+# 14. Storage Account with Data Lake Gen2
 resource "azurerm_storage_account" "storage" {
   name                     = var.storage_account_name
-  resource_group_name       = azurerm_resource_group.rg.name
+  resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
-  account_tier              = "Standard"
+  account_tier             = "Standard"
   account_replication_type = "LRS"
+  is_hns_enabled           = true
 
   lifecycle {
-    prevent_destroy = false  # Allow deletion of the storage account
+    prevent_destroy = false
   }
 
-  tags = {
-    Environment = "Production"
-  }
+  tags = var.tags
 }
 
-# Storage Container Example (optional)
+# 15. Data Lake Gen2 Filesystem
+resource "azurerm_storage_data_lake_gen2_filesystem" "data_lake_filesystem" {
+  name               = "datalake-filesystem"
+  storage_account_id = azurerm_storage_account.storage.id
+
+  depends_on = [azurerm_storage_account.storage]
+}
+
+# 16. Storage Container
 resource "azurerm_storage_container" "data_container" {
   name                  = "data-container"
-  storage_account_id    = azurerm_storage_account.storage.id
+  storage_account_name = var.storage_account_name
   container_access_type = "private"
+
+  depends_on = [azurerm_storage_account.storage]
 }
 
-# Storage Queue Example (optional)
-resource "azurerm_storage_queue" "data_queue" {
-  name                 = "dataqueue"
-  storage_account_name = azurerm_storage_account.storage.name
-
-  lifecycle {
-    prevent_destroy = false  # Allow deletion of the storage queue
-  }
-}
-
-# Storage Table Example (optional)
-resource "azurerm_storage_table" "data_table" {
-  name                 = "datatable"
-  storage_account_name = azurerm_storage_account.storage.name
-
-  lifecycle {
-    prevent_destroy = false  # Allow deletion of the storage table
-  }
-}
-
-# Optional: Blob Service (if needed)
+# 17. Blob Storage
 resource "azurerm_storage_blob" "data_blob" {
   name                   = "data-blob"
   storage_account_name   = azurerm_storage_account.storage.name
@@ -50,20 +39,5 @@ resource "azurerm_storage_blob" "data_blob" {
   type                   = "Block"
   source_content         = "Hello, this is a test file!"
 
-  lifecycle {
-    prevent_destroy = false  # Allow deletion of the storage blob
-  }
-}
-
-# Assign RBAC Role to Principal for Storage Account
-resource "azurerm_role_assignment" "storage_account_rbac" {
-  principal_id         = var.rbac_principal_id
-  role_definition_name = "Storage Blob Data Contributor"
-  scope                = azurerm_storage_account.storage.id
-}
-
-resource "azurerm_role_assignment" "blob_contributor" {
-  principal_id         = var.rbac_principal_id
-  role_definition_name = "Storage Blob Data Contributor"
-  scope                = azurerm_storage_container.data_container.id
+  depends_on = [azurerm_storage_container.data_container]
 }
