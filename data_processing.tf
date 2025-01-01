@@ -114,9 +114,21 @@ output "databricks_host" {
 
 # Provider configuration for Databricks with AAD authentication
 provider "databricks" {
-  host                        = azurerm_databricks_workspace.example.workspace_url
   azure_workspace_resource_id = azurerm_databricks_workspace.example.id
+  azure_client_id             = var.rbac_principal_id
+  azure_client_secret         = var.service_principal_key
+  azure_tenant_id             = var.tenant_id
 }
+
+# Temporary wait to ensure Workspace readiness
+resource "null_resource" "wait_for_workspace" {
+  depends_on = [azurerm_databricks_workspace.example]
+
+  provisioner "local-exec" {
+    command = "sleep 30"
+  }
+}
+
 
 # 37. Databricks Cluster
 resource "databricks_cluster" "example" {
@@ -125,8 +137,8 @@ resource "databricks_cluster" "example" {
   node_type_id  = "Standard_DS3_v2"
 
   autoscale {
-    min_workers = 2
-    max_workers = 8
+    min_workers = 1
+    max_workers = 1
   }
 }
 

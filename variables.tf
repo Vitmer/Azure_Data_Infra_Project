@@ -59,4 +59,8 @@ variable "databricks_workspace_name" {
   type        = string
 }
 
-
+variable "example_password" {
+  description = "The example password from Key Vault"
+  type        = string
+  sensitive   = true
+}
