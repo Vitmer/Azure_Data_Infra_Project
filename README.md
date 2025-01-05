@@ -9,6 +9,18 @@ This project demonstrates the creation of a fully functional infrastructure in A
 
 ---
 
+Here is the list of rolesh:
+	1.	User Access Administrator
+	2.	Contributor
+	3.	CustomDatabricksAdmin
+	4.	Key Vault Secrets User
+	5.	Storage Blob Data Contributor
+	6.	Automation Contributor
+	7.	Log Analytics Contributor
+	8.	Key Vault Contributor
+
+These roles provide access and management of various resources in Azure, including Data Factory, Key Vault, Storage, and Log Analytics.
+
 ## Key Features
 
 ### 1. Infrastructure Deployment

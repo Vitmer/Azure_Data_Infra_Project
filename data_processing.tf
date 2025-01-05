@@ -137,8 +137,8 @@ resource "databricks_cluster" "example" {
   node_type_id  = "Standard_DS3_v2"
 
   autoscale {
-    min_workers = 1
-    max_workers = 1
+    min_workers = 2
+    max_workers = 8
   }
 }
 
