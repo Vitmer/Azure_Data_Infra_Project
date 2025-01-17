@@ -27,3 +27,5 @@ terraform.tfstate.*
 terraform.tfvars
 
 graph.svg
+
+terraform.lock.hcl
