@@ -8,6 +8,10 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
+provider "databricks" {
+  host  = "https://westeurope.azuredatabricks.net"
+}
+
 terraform {
   required_providers {
     databricks = {

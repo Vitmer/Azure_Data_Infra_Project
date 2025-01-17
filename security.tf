@@ -68,7 +68,7 @@ resource "azurerm_role_assignment" "key_vault_reader" {
 # 52. Role Assignment for Databricks Admin
 resource "azurerm_role_assignment" "databricks_admin" {
   principal_id         = var.service_principal_id
-  role_definition_name = "Databricks Admin"
+  role_definition_name = "Contributor"
   scope                = azurerm_databricks_workspace.example.id
 
   depends_on = [azurerm_databricks_workspace.example]
