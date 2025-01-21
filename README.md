@@ -65,68 +65,53 @@ To ensure successful deployment, resources must be created in the following orde
 
 ### Deployment Order with Dependencies
 
-#### From `main.tf`
-1. `azurerm_resource_group 'rg'`  
-2. `azurerm_virtual_network 'vnet'`  
-3. `azurerm_subnet 'public'`  
-4. `azurerm_subnet 'private'`  
-5. `azurerm_subnet 'databricks'`  
-6. `azurerm_subnet 'bastion_subnet'`  
-7. `azurerm_public_ip 'nat_gateway_ip'`  
-8. `azurerm_public_ip 'bastion_ip'`  
-9. `azurerm_public_ip 'public_vm_ip'`  
-10. `azurerm_nat_gateway 'nat_gateway'`  
-    • **depends_on**: `azurerm_public_ip 'nat_gateway_ip'`  
-11. `azurerm_nat_gateway_public_ip_association 'nat_gateway_assoc'`  
-    • **depends_on**: `azurerm_nat_gateway 'nat_gateway'`  
-12. `azurerm_subnet_nat_gateway_association 'private_nat_assoc'`  
-    • **depends_on**: `azurerm_nat_gateway 'nat_gateway'`  
-13. `azurerm_subnet_nat_gateway_association 'databricks_nat_assoc'`  
-    • **depends_on**: `azurerm_nat_gateway 'nat_gateway'`  
-
-#### From `storage.tf`
-14. `azurerm_storage_account 'storage'`  
-15. `azurerm_storage_data_lake_gen2_filesystem 'data_lake_filesystem'`  
-    • **depends_on**: `azurerm_storage_account 'storage'`  
-16. `azurerm_storage_container 'data_container'`  
-    • **depends_on**: `azurerm_storage_account 'storage'`  
-17. `azurerm_storage_blob 'data_blob'`  
-    • **depends_on**: `azurerm_storage_container 'data_container'`  
-
-#### From `security.tf`
-18. `azurerm_key_vault 'key_vault'`  
-19. `azurerm_key_vault_access_policy 'terraform_access'`  
-    • **depends_on**: `azurerm_key_vault 'key_vault'`  
-20. `azurerm_key_vault_secret 'synapse_sql_password'`  
-    • **depends_on**: `azurerm_key_vault 'key_vault'`  
-21. `azurerm_key_vault_secret 'example_secret'`  
-    • **depends_on**: `azurerm_key_vault 'key_vault'`  
-
-#### Back to `main.tf`
-22. `azurerm_linux_virtual_machine 'public_vm'`  
-    • **depends_on**: `azurerm_subnet_nat_gateway_association 'private_nat_assoc'`  
-23. `azurerm_linux_virtual_machine 'private_vm'`  
-    • **depends_on**: `azurerm_subnet_nat_gateway_association 'private_nat_assoc'`  
-
-#### From `data_processing.tf`
-24. `azurerm_data_factory 'example'`  
-25. `azurerm_data_factory_pipeline 'etl_pipeline'`
-    • **depends_on**: `azurerm_data_factory_dataset_azure_blob 'example', azurerm_data_factory_dataset_sql_server_table 'synapse_dataset'`
-26. `azurerm_data_factory_pipeline 'databricks_etl'`  
-    • **depends_on**: `azurerm_data_factory_dataset_azure_blob 'example', azurerm_data_factory_dataset_sql_server_table 'synapse_dataset'`  
-27. `azurerm_data_factory_linked_service_azure_blob_storage 'blob_service_link'`  
-    • **depends_on**: `azurerm_storage_account 'storage'`  
-28. `azurerm_data_factory_linked_service_azure_blob_storage 'data_lake_service_link'`  
-    • **depends_on**: `azurerm_storage_account 'storage'`  
-29. `azurerm_data_factory_dataset_sql_server_table 'synapse_dataset'`  
-    • **depends_on**: `azurerm_data_factory 'example'`  
-
-#### From `analytics.tf`
-33. `azurerm_synapse_workspace 'synapse_workspace'`  
-34. `azurerm_synapse_sql_pool 'sql_pool'`  
-    • **depends_on**: `azurerm_synapse_workspace 'synapse_workspace'`  
-35. `azurerm_role_assignment 'synapse_rbac'`  
-    • **depends_on**: `azurerm_synapse_workspace 'synapse_workspace'`  
+  1.	azurerm_resource_group.rg - Create the resource group.
+	2.	azurerm_virtual_network.vnet - Create the virtual network.
+	3.	azurerm_subnet.public - Create the public subnet.
+	4.	azurerm_subnet.private - Create the private subnet.
+	5.	azurerm_subnet.databricks - Create the Databricks subnet.
+	6.	azurerm_subnet.bastion_subnet - Create the Bastion subnet.
+	7.	azurerm_storage_account.storage - Create the storage account.
+	8.	azurerm_storage_container.data_container - Create the storage container.
+	9.	azurerm_storage_data_lake_gen2_filesystem.data_lake_filesystem - Create the Data Lake Gen2 filesystem.
+	10.	azurerm_network_security_group.nsg_public - Create the public network security group.
+	11.	azurerm_network_interface.public_nic - Create the public NIC.
+	12.	azurerm_network_interface.private_nic - Create the private NIC.
+	13.	azurerm_public_ip.public_vm_ip - Create the public IP for the VM.
+	14.	azurerm_public_ip.bastion_ip - Create the public IP for Bastion.
+	15.	azurerm_public_ip.nat_gateway_ip - Create the public IP for NAT Gateway.
+	16.	azurerm_nat_gateway.nat_gateway - Create the NAT Gateway.
+	17.	azurerm_subnet_nat_gateway_association.private_nat_assoc - Associate NAT Gateway with the private subnet.
+	18.	azurerm_subnet_nat_gateway_association.databricks_nat_assoc - Associate NAT Gateway with the Databricks subnet.
+	19.	azurerm_recovery_services_vault.backup_vault - Create the Recovery Services Vault.
+	20.	azurerm_backup_policy_vm.vm_backup_policy - Create the VM backup policy.
+	21.	azurerm_backup_protected_vm.protected_vm_private - Protect the private VM with the backup policy.
+	22.	azurerm_backup_protected_vm.protected_vm_public - Protect the public VM with the backup policy.
+	23.	azurerm_key_vault.key_vault - Create the Key Vault.
+	24.	azurerm_bastion_host.bastion - Create the Bastion Host.
+	25.	azurerm_linux_virtual_machine.public_vm - Create the public Linux VM.
+	26.	azurerm_linux_virtual_machine.private_vm - Create the private Linux VM.
+	27.	azurerm_synapse_workspace.synapse_workspace - Create the Synapse Workspace.
+	28.	azurerm_synapse_sql_pool.sql_pool - Create the Synapse SQL Pool.
+	29.	azurerm_data_factory.example - Create the Data Factory instance.
+	30.	azurerm_data_factory_pipeline.etl_pipeline - Create the ETL pipeline in Data Factory.
+	31.	azurerm_data_factory_dataset_azure_blob.example - Create the Azure Blob dataset.
+	32.	azurerm_data_factory_dataset_sql_server_table.synapse_dataset - Create the Synapse dataset.
+	33.	azurerm_data_factory_dataset_sql_server_table.analytics_synapse_dataset - Create the Analytics Synapse dataset.
+	34.	azurerm_data_factory_linked_service_azure_blob_storage.blob_service_link - Create the Azure Blob linked service.
+	35.	azurerm_data_factory_linked_service_sql_server.example - Create the SQL Server linked service.
+	36.	azurerm_data_factory_linked_service_synapse.synapse_link - Create the Synapse linked service.
+	37.	azurerm_databricks_workspace.example - Create the Databricks Workspace.
+	38.	azurerm_storage_blob.data_blob - Upload the test data blob.
+	39.	azurerm_role_assignment.key_vault_reader - Assign the Key Vault Reader role.
+	40.	azurerm_role_assignment.databricks_admin - Assign the Databricks Admin role.
+	41.	null_resource.add_principal_to_admins - Add the principal to admins (custom script).
+	42.	null_resource.create_databricks_cluster - Create the Databricks Cluster (custom script).
+	43.	random_password.synapse_sql_password - Generate the Synapse SQL password.
+	44.	random_string.suffix - Generate a random string for resource suffixes.
+	45.	random_string.suffix_analytics - Generate a random string for Analytics suffixes.
+	46.	random_string.suffix_processing - Generate a random string for Processing suffixes.
+ 
 
 ---
 
