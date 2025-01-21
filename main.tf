@@ -8,8 +8,14 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-provider "databricks" {
-  host  = "https://westeurope.azuredatabricks.net"
+# 1. Resource Group
+resource "azurerm_resource_group" "rg" {
+  name     = var.resource_group_name
+  location = var.location
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 terraform {
@@ -29,15 +35,6 @@ terraform {
   }
 }
 
-# 1. Resource Group
-resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name
-  location = var.location
-
-  lifecycle {
-  prevent_destroy = true
-}
-}
 
 # 2. Virtual Network
 resource "azurerm_virtual_network" "vnet" {

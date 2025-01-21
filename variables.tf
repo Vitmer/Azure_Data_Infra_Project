@@ -58,8 +58,8 @@ variable "databricks_workspace_name" {
   description = "Name of the Databricks Workspace"
   type        = string
 }
-
-variable "databricks_token" {
-  description = "Databricks API token"
-  type        = string
+variable "create_access_policy" {
+  description = "Flag to create the access policy"
+  type        = bool
+  default     = true
 }

@@ -107,21 +107,126 @@ resource "azurerm_databricks_workspace" "example" {
   }
 }
 
-# Local variable for using Workspace ID
-locals {
-  databricks_workspace_id = azurerm_databricks_workspace.example.id
+# Output for the Databricks Workspace URL
+output "databricks_workspace_url" {
+  value       = "https://${azurerm_databricks_workspace.example.workspace_url}"
+  description = "URL of the created Databricks Workspace"
 }
 
-# 37. Databricks Cluster
-resource "databricks_cluster" "example" {
+# null_resource to add admin principal
+resource "null_resource" "add_principal_to_admins" {
   depends_on = [azurerm_databricks_workspace.example]
 
-  cluster_name  = "example-cluster"
-  spark_version = "11.3.x-scala2.12"
-  node_type_id  = "Standard_DS3_v2"
-  autoscale {
-    min_workers = 2
-    max_workers = 8
+  provisioner "local-exec" {
+    command = <<EOT
+      set -euo pipefail
+
+      # Maximum retry attempts
+      MAX_RETRIES=10
+      RETRY_DELAY=10
+
+      # Wait for the Databricks Workspace URL to be available
+      for i in $(seq 1 $MAX_RETRIES); do
+        WORKSPACE_URL=$(terraform output -raw databricks_workspace_url || echo "")
+
+        if [ -n "$WORKSPACE_URL" ] && [ "$WORKSPACE_URL" != "0" ]; then
+          echo "Databricks Workspace URL is available: $WORKSPACE_URL"
+          break
+        fi
+
+        echo "Databricks Workspace URL is not available, attempt $i/$MAX_RETRIES..."
+        sleep $RETRY_DELAY
+
+        if [ $i -eq $MAX_RETRIES ]; then
+          echo "Exceeded maximum retry attempts for Databricks Workspace URL." >&2
+          exit 1
+        fi
+      done
+
+      # Retrieve Azure access token
+      TOKEN=$(az account get-access-token --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d --query accessToken -o tsv)
+
+      if [ -z "$TOKEN" ]; then
+        echo "Failed to retrieve access token." >&2
+        exit 1
+      fi
+
+      # Send API request to add admin principal
+      for i in $(seq 1 $MAX_RETRIES); do
+        curl -X POST -H "Authorization: Bearer $TOKEN" \
+             -H "Content-Type: application/json" \
+             -d '{
+               "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+               "displayName": "admins",
+               "members": [
+                 {
+                   "value": "${var.service_principal_id}",
+                   "type": "ServicePrincipal"
+                 }
+               ]
+             }' \
+             "$WORKSPACE_URL/api/2.0/preview/scim/v2/Groups" && break || {
+          echo "Error adding admin principal, retrying attempt $i/$MAX_RETRIES..."
+          sleep $RETRY_DELAY
+        }
+
+        if [ $i -eq $MAX_RETRIES ]; then
+          echo "Failed to add admin principal after $MAX_RETRIES attempts." >&2
+          exit 1
+        fi
+      done
+    EOT
+    interpreter = ["bash", "-c"]
+  }
+}
+
+# null_resource to create Databricks Cluster
+resource "null_resource" "create_databricks_cluster" {
+  depends_on = [null_resource.add_principal_to_admins]
+
+  provisioner "local-exec" {
+    command = <<EOT
+      set -euo pipefail
+
+      WORKSPACE_URL=$(terraform output -raw databricks_workspace_url)
+
+      if [ -z "$WORKSPACE_URL" ]; then
+        echo "Databricks Workspace URL is not found." >&2
+        exit 1
+      fi
+
+      TOKEN=$(az account get-access-token --resource 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d --query accessToken -o tsv)
+
+      if [ -z "$TOKEN" ]; then
+        echo "Failed to retrieve access token." >&2
+        exit 1
+      fi
+
+      # Send API request to create the cluster
+      for i in $(seq 1 5); do
+        curl -X POST -H "Authorization: Bearer $TOKEN" \
+             -H "Content-Type: application/json" \
+             -d '{
+               "cluster_name": "example-cluster",
+               "spark_version": "11.3.x-scala2.12",
+               "node_type_id": "Standard_DS3_v2",
+               "autoscale": {
+                 "min_workers": 2,
+                 "max_workers": 8
+               }
+             }' \
+             "$WORKSPACE_URL/api/2.0/clusters/create" && break || {
+          echo "Error creating cluster, retrying attempt $i/5..."
+          sleep 10
+        }
+
+        if [ $i -eq 5 ]; then
+          echo "Failed to create cluster after 5 attempts." >&2
+          exit 1
+        fi
+      done
+    EOT
+    interpreter = ["bash", "-c"]
   }
 }
 
