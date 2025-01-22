@@ -19,6 +19,36 @@ resource "azurerm_key_vault" "key_vault" {
   tags = var.tags
 }
 
+# Encryption Policy
+#resource "azurerm_policy_definition" "encryption_policy" {
+ # name         = "enforce-encryption"
+ # policy_type  = "BuiltIn"
+#  display_name = "Enforce encryption on resources"
+ ## mode         = "All"
+#}
+resource "azurerm_policy_definition" "encryption_policy" {
+  name         = "enforce-encryption"
+  policy_type  = "Custom"
+  display_name = "Enforce Encryption for Storage Accounts"
+  description  = "This policy ensures all storage accounts have encryption enabled."
+  mode         = "All"
+
+  policy_rule = jsonencode({
+    if = {
+      field = "type"
+      equals = "Microsoft.Storage/storageAccounts"
+    }
+    then = {
+      effect = "Deny"
+    }
+  })
+
+  metadata = jsonencode({
+    category = "Storage"
+  })
+}
+
+
 resource "random_string" "suffix" {
   length  = 8
   special = false

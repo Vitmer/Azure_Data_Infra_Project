@@ -48,6 +48,26 @@ resource "azurerm_virtual_network" "vnet" {
   }
 }
 
+# Log Analytics Workspace for diagnostics
+resource "azurerm_log_analytics_workspace" "logs" {
+  name                = "log-workspace"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vnet_logs" {
+  name                       = "vnet-diagnostics"
+  target_resource_id         = azurerm_virtual_network.vnet.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.logs.id
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
 # 3. Public Subnet
 resource "azurerm_subnet" "public" {
   name                 = "Public-Subnet"  # Старое имя Public Subnet
@@ -62,13 +82,26 @@ resource "azurerm_subnet" "public" {
 
 # 4. Private Subnet
 resource "azurerm_subnet" "private" {
-  name                 = "Private-Subnet"  
+  name                 = "private-subnet"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.2.0/24"]
 
-  lifecycle {
-    ignore_changes = [address_prefixes]
+  service_endpoints = ["Microsoft.Storage"]
+}
+
+# Private Link для Storage Account
+resource "azurerm_private_endpoint" "storage_private_link" {
+  name                = "storage-private-link"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  subnet_id           = azurerm_subnet.private.id
+
+  private_service_connection {
+    name                           = "storage-link"
+    private_connection_resource_id = azurerm_storage_account.storage.id
+    is_manual_connection           = false
+    subresource_names              = ["blob"]
   }
 }
 
@@ -244,6 +277,44 @@ resource "azurerm_linux_virtual_machine" "private_vm" {
   }
 }
 
+# Alert for high CPU usage on public VM
+resource "azurerm_monitor_metric_alert" "public_vm_cpu_alert" {
+  name                = "cpu-alert-public-vm"
+  resource_group_name = azurerm_resource_group.rg.name
+  scopes              = [azurerm_linux_virtual_machine.public_vm.id]
+  description         = "Alert for high CPU usage on public VM"
+  severity            = 2
+  frequency           = "PT1M"
+  window_size         = "PT5M"
+
+  criteria {
+    metric_namespace = "Microsoft.Compute/virtualMachines"
+    metric_name      = "Percentage CPU"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 80
+  }
+}
+
+# Alert for high CPU usage on private VM
+resource "azurerm_monitor_metric_alert" "private_vm_cpu_alert" {
+  name                = "cpu-alert-private-vm"
+  resource_group_name = azurerm_resource_group.rg.name
+  scopes              = [azurerm_linux_virtual_machine.private_vm.id]
+  description         = "Alert for high CPU usage on private VM"
+  severity            = 2
+  frequency           = "PT1M"
+  window_size         = "PT5M"
+
+  criteria {
+    metric_namespace = "Microsoft.Compute/virtualMachines"
+    metric_name      = "Percentage CPU"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 80
+  }
+}
+
 # 41. Azure Bastion Host
 resource "azurerm_bastion_host" "bastion" {
   name                = "bastion-host"  # Старое имя Bastion Host
@@ -262,6 +333,20 @@ resource "azurerm_bastion_host" "bastion" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+# Private DNS Zone for Bastion
+resource "azurerm_private_dns_zone" "dns_zone" {
+  name                = "privatelink.bastion.azure.com"
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+# Link DNS Zone to VNet
+resource "azurerm_private_dns_zone_virtual_network_link" "dns_link" {
+  name                  = "vnet-dns-link"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.dns_zone.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
 }
 
 # 42. Network Security Group (NSG) for Public Subnet
@@ -418,4 +503,16 @@ resource "null_resource" "enable_public_access" {
   }
 
   depends_on = [azurerm_databricks_workspace.example]
+}
+
+# Monitor Action Group
+resource "azurerm_monitor_action_group" "email_alerts" {
+  name                = "email-alerts"
+  resource_group_name = azurerm_resource_group.rg.name
+  short_name          = "alerts"
+
+  email_receiver {
+    name          = "AdminEmail"
+    email_address = "admin@example.com"
+  }
 }

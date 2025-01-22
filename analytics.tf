@@ -12,6 +12,28 @@ resource "azurerm_synapse_workspace" "synapse_workspace" {
   }
 }
 
+# 33a. SQL Server (Required for Synapse Data Encryption)
+resource "azurerm_mssql_server" "sql_server" {
+  name                         = "sql-server-${random_string.suffix_analytics.result}"
+  resource_group_name          = azurerm_resource_group.rg.name
+  location                     = azurerm_resource_group.rg.location
+  version                      = "12.0"
+  administrator_login          = "adminuser"
+  administrator_login_password = var.synapse_sql_password
+}
+
+# 33b. Synapse Private Link
+resource "azurerm_synapse_private_link_hub" "private_link" {
+  name                = "synapseprivatelink"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+# 33c. Synapse Data Masking (SQL Server Encryption)
+resource "azurerm_mssql_server_transparent_data_encryption" "data_masking" {
+  server_id = azurerm_mssql_server.sql_server.id
+}
+
 # 34. Synapse SQL Pool
 resource "azurerm_synapse_sql_pool" "sql_pool" {
   name                 = "synapse_sql_pool"
@@ -30,14 +52,14 @@ resource "azurerm_role_assignment" "synapse_rbac" {
 resource "azurerm_data_factory_linked_service_synapse" "synapse_link" {
   name              = "synapse-linked-service"
   data_factory_id   = azurerm_data_factory.example.id
-  connection_string = "Server=tcp:${azurerm_synapse_workspace.synapse_workspace.name}.database.windows.net,1433;Authentication=ActiveDirectoryPassword;"
+  connection_string = "Server=tcp:${azurerm_mssql_server.sql_server.name}.database.windows.net,1433;Authentication=ActiveDirectoryPassword;"
 }
 
 # 37. Dataset for Synapse in Data Factory
 resource "azurerm_data_factory_linked_service_sql_server" "example" {
   name              = "sqlserver-link"
   data_factory_id   = azurerm_data_factory.example.id
-  connection_string = "Server=tcp:${azurerm_synapse_workspace.synapse_workspace.name}.database.windows.net,1433;Database=etl_db;Authentication=ActiveDirectoryPassword;"
+  connection_string = "Server=tcp:${azurerm_mssql_server.sql_server.name}.database.windows.net,1433;Database=etl_db;Authentication=ActiveDirectoryPassword;"
 }
 
 # 38. Dataset for SQL Server Table in Azure Data Factory

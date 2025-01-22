@@ -9,6 +9,21 @@ resource "azurerm_data_factory" "example" {
   }
 }
 
+# Monitor ADF Diagnostics
+resource "azurerm_monitor_diagnostic_setting" "data_factory_logs" {
+  name                       = "adf-logs"
+  target_resource_id         = azurerm_data_factory.example.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.logs.id
+
+  enabled_log {
+    category = "PipelineRuns"
+  }
+
+  enabled_log {
+    category = "ActivityRuns"
+  }
+}
+
 # 25. ETL Pipeline
 resource "azurerm_data_factory_pipeline" "etl_pipeline" {
   depends_on = [
