@@ -251,3 +251,15 @@ resource "random_string" "suffix_processing" {
   special = false
   upper   = false
 }
+
+# Подключение логов Databricks к Log Analytics Workspace
+resource "azurerm_monitor_diagnostic_setting" "databricks_logs" {
+  name                       = "databricks-logs"
+  target_resource_id         = azurerm_databricks_workspace.example.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.logs.id
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}

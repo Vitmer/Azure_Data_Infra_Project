@@ -226,6 +226,24 @@ Terraform will perform the following actions:
       [32m+[0m[0m custom_parameters (known after apply)
     }
 
+[1m  # azurerm_firewall.firewall[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_firewall" "firewall" {
+      [32m+[0m[0m id                  = (known after apply)
+      [32m+[0m[0m location            = "westeurope"
+      [32m+[0m[0m name                = "firewall-project"
+      [32m+[0m[0m resource_group_name = "rg-azure-data-infra"
+      [32m+[0m[0m sku_name            = "AZFW_VNet"
+      [32m+[0m[0m sku_tier            = "Standard"
+      [32m+[0m[0m threat_intel_mode   = (known after apply)
+
+      [32m+[0m[0m ip_configuration {
+          [32m+[0m[0m name                 = "firewall-ip-config"
+          [32m+[0m[0m private_ip_address   = (known after apply)
+          [32m+[0m[0m public_ip_address_id = (known after apply)
+          [32m+[0m[0m subnet_id            = (known after apply)
+        }
+    }
+
 [1m  # azurerm_key_vault.key_vault[0m will be created
 [0m  [32m+[0m[0m resource "azurerm_key_vault" "key_vault" {
       [32m+[0m[0m access_policy                 = [
@@ -369,6 +387,171 @@ Terraform will perform the following actions:
       [32m+[0m[0m termination_notification (known after apply)
     }
 
+[1m  # azurerm_log_analytics_workspace.logs[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_log_analytics_workspace" "logs" {
+      [32m+[0m[0m allow_resource_only_permissions    = true
+      [32m+[0m[0m daily_quota_gb                     = -1
+      [32m+[0m[0m id                                 = (known after apply)
+      [32m+[0m[0m internet_ingestion_enabled         = true
+      [32m+[0m[0m internet_query_enabled             = true
+      [32m+[0m[0m local_authentication_disabled      = false
+      [32m+[0m[0m location                           = "westeurope"
+      [32m+[0m[0m name                               = "log-workspace"
+      [32m+[0m[0m primary_shared_key                 = (sensitive value)
+      [32m+[0m[0m reservation_capacity_in_gb_per_day = (known after apply)
+      [32m+[0m[0m resource_group_name                = "rg-azure-data-infra"
+      [32m+[0m[0m retention_in_days                  = 30
+      [32m+[0m[0m secondary_shared_key               = (sensitive value)
+      [32m+[0m[0m sku                                = "PerGB2018"
+      [32m+[0m[0m workspace_id                       = (known after apply)
+    }
+
+[1m  # azurerm_monitor_action_group.email_alerts[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_monitor_action_group" "email_alerts" {
+      [32m+[0m[0m enabled             = true
+      [32m+[0m[0m id                  = (known after apply)
+      [32m+[0m[0m location            = "global"
+      [32m+[0m[0m name                = "email-alerts"
+      [32m+[0m[0m resource_group_name = "rg-azure-data-infra"
+      [32m+[0m[0m short_name          = "alerts"
+
+      [32m+[0m[0m email_receiver {
+          [32m+[0m[0m email_address = "admin@example.com"
+          [32m+[0m[0m name          = "AdminEmail"
+        }
+    }
+
+[1m  # azurerm_monitor_diagnostic_setting.data_factory_logs[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_monitor_diagnostic_setting" "data_factory_logs" {
+      [32m+[0m[0m id                             = (known after apply)
+      [32m+[0m[0m log_analytics_destination_type = (known after apply)
+      [32m+[0m[0m log_analytics_workspace_id     = (known after apply)
+      [32m+[0m[0m name                           = "adf-logs"
+      [32m+[0m[0m target_resource_id             = (known after apply)
+
+      [32m+[0m[0m enabled_log {
+          [32m+[0m[0m category       = "ActivityRuns"
+            [90m# (1 unchanged attribute hidden)[0m[0m
+        }
+      [32m+[0m[0m enabled_log {
+          [32m+[0m[0m category       = "PipelineRuns"
+            [90m# (1 unchanged attribute hidden)[0m[0m
+        }
+
+      [32m+[0m[0m log (known after apply)
+    }
+
+[1m  # azurerm_monitor_diagnostic_setting.databricks_logs[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_monitor_diagnostic_setting" "databricks_logs" {
+      [32m+[0m[0m id                             = (known after apply)
+      [32m+[0m[0m log_analytics_destination_type = (known after apply)
+      [32m+[0m[0m log_analytics_workspace_id     = (known after apply)
+      [32m+[0m[0m name                           = "databricks-logs"
+      [32m+[0m[0m target_resource_id             = (known after apply)
+
+      [32m+[0m[0m enabled_log (known after apply)
+
+      [32m+[0m[0m log (known after apply)
+
+      [32m+[0m[0m metric {
+          [32m+[0m[0m category = "AllMetrics"
+          [32m+[0m[0m enabled  = true
+        }
+    }
+
+[1m  # azurerm_monitor_diagnostic_setting.vnet_logs[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_monitor_diagnostic_setting" "vnet_logs" {
+      [32m+[0m[0m id                             = (known after apply)
+      [32m+[0m[0m log_analytics_destination_type = (known after apply)
+      [32m+[0m[0m log_analytics_workspace_id     = (known after apply)
+      [32m+[0m[0m name                           = "vnet-diagnostics"
+      [32m+[0m[0m target_resource_id             = (known after apply)
+
+      [32m+[0m[0m enabled_log (known after apply)
+
+      [32m+[0m[0m log (known after apply)
+
+      [32m+[0m[0m metric {
+          [32m+[0m[0m category = "AllMetrics"
+          [32m+[0m[0m enabled  = true
+        }
+    }
+
+[1m  # azurerm_monitor_metric_alert.private_vm_cpu_alert[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_monitor_metric_alert" "private_vm_cpu_alert" {
+      [32m+[0m[0m auto_mitigate            = true
+      [32m+[0m[0m description              = "Alert for high CPU usage on private VM"
+      [32m+[0m[0m enabled                  = true
+      [32m+[0m[0m frequency                = "PT1M"
+      [32m+[0m[0m id                       = (known after apply)
+      [32m+[0m[0m name                     = "cpu-alert-private-vm"
+      [32m+[0m[0m resource_group_name      = "rg-azure-data-infra"
+      [32m+[0m[0m scopes                   = (known after apply)
+      [32m+[0m[0m severity                 = 2
+      [32m+[0m[0m target_resource_location = (known after apply)
+      [32m+[0m[0m target_resource_type     = (known after apply)
+      [32m+[0m[0m window_size              = "PT5M"
+
+      [32m+[0m[0m criteria {
+          [32m+[0m[0m aggregation            = "Average"
+          [32m+[0m[0m metric_name            = "Percentage CPU"
+          [32m+[0m[0m metric_namespace       = "Microsoft.Compute/virtualMachines"
+          [32m+[0m[0m operator               = "GreaterThan"
+          [32m+[0m[0m skip_metric_validation = false
+          [32m+[0m[0m threshold              = 80
+        }
+    }
+
+[1m  # azurerm_monitor_metric_alert.public_vm_cpu_alert[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_monitor_metric_alert" "public_vm_cpu_alert" {
+      [32m+[0m[0m auto_mitigate            = true
+      [32m+[0m[0m description              = "Alert for high CPU usage on public VM"
+      [32m+[0m[0m enabled                  = true
+      [32m+[0m[0m frequency                = "PT1M"
+      [32m+[0m[0m id                       = (known after apply)
+      [32m+[0m[0m name                     = "cpu-alert-public-vm"
+      [32m+[0m[0m resource_group_name      = "rg-azure-data-infra"
+      [32m+[0m[0m scopes                   = (known after apply)
+      [32m+[0m[0m severity                 = 2
+      [32m+[0m[0m target_resource_location = (known after apply)
+      [32m+[0m[0m target_resource_type     = (known after apply)
+      [32m+[0m[0m window_size              = "PT5M"
+
+      [32m+[0m[0m criteria {
+          [32m+[0m[0m aggregation            = "Average"
+          [32m+[0m[0m metric_name            = "Percentage CPU"
+          [32m+[0m[0m metric_namespace       = "Microsoft.Compute/virtualMachines"
+          [32m+[0m[0m operator               = "GreaterThan"
+          [32m+[0m[0m skip_metric_validation = false
+          [32m+[0m[0m threshold              = 80
+        }
+    }
+
+[1m  # azurerm_mssql_server.sql_server[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_mssql_server" "sql_server" {
+      [32m+[0m[0m administrator_login                  = "adminuser"
+      [32m+[0m[0m administrator_login_password         = (sensitive value)
+      [32m+[0m[0m connection_policy                    = "Default"
+      [32m+[0m[0m fully_qualified_domain_name          = (known after apply)
+      [32m+[0m[0m id                                   = (known after apply)
+      [32m+[0m[0m location                             = "westeurope"
+      [32m+[0m[0m minimum_tls_version                  = "1.2"
+      [32m+[0m[0m name                                 = (known after apply)
+      [32m+[0m[0m outbound_network_restriction_enabled = false
+      [32m+[0m[0m primary_user_assigned_identity_id    = (known after apply)
+      [32m+[0m[0m public_network_access_enabled        = true
+      [32m+[0m[0m resource_group_name                  = "rg-azure-data-infra"
+      [32m+[0m[0m restorable_dropped_database_ids      = (known after apply)
+      [32m+[0m[0m version                              = "12.0"
+    }
+
+[1m  # azurerm_mssql_server_transparent_data_encryption.data_masking[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_mssql_server_transparent_data_encryption" "data_masking" {
+      [32m+[0m[0m auto_rotation_enabled = false
+      [32m+[0m[0m id                    = (known after apply)
+      [32m+[0m[0m server_id             = (known after apply)
+    }
+
 [1m  # azurerm_nat_gateway.nat_gateway[0m will be created
 [0m  [32m+[0m[0m resource "azurerm_nat_gateway" "nat_gateway" {
       [32m+[0m[0m id                      = (known after apply)
@@ -508,6 +691,78 @@ Terraform will perform the following actions:
         ]
     }
 
+[1m  # azurerm_policy_definition.encryption_policy[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_policy_definition" "encryption_policy" {
+      [32m+[0m[0m description         = "This policy ensures all storage accounts have encryption enabled."
+      [32m+[0m[0m display_name        = "Enforce Encryption for Storage Accounts"
+      [32m+[0m[0m id                  = (known after apply)
+      [32m+[0m[0m metadata            = jsonencode(
+            {
+              [32m+[0m[0m category = "Storage"
+            }
+        )
+      [32m+[0m[0m mode                = "All"
+      [32m+[0m[0m name                = "enforce-encryption"
+      [32m+[0m[0m policy_rule         = jsonencode(
+            {
+              [32m+[0m[0m if   = {
+                  [32m+[0m[0m equals = "Microsoft.Storage/storageAccounts"
+                  [32m+[0m[0m field  = "type"
+                }
+              [32m+[0m[0m then = {
+                  [32m+[0m[0m effect = "Deny"
+                }
+            }
+        )
+      [32m+[0m[0m policy_type         = "Custom"
+      [32m+[0m[0m role_definition_ids = (known after apply)
+    }
+
+[1m  # azurerm_private_dns_zone.dns_zone[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_private_dns_zone" "dns_zone" {
+      [32m+[0m[0m id                                                    = (known after apply)
+      [32m+[0m[0m max_number_of_record_sets                             = (known after apply)
+      [32m+[0m[0m max_number_of_virtual_network_links                   = (known after apply)
+      [32m+[0m[0m max_number_of_virtual_network_links_with_registration = (known after apply)
+      [32m+[0m[0m name                                                  = "privatelink.bastion.azure.com"
+      [32m+[0m[0m number_of_record_sets                                 = (known after apply)
+      [32m+[0m[0m resource_group_name                                   = "rg-azure-data-infra"
+
+      [32m+[0m[0m soa_record (known after apply)
+    }
+
+[1m  # azurerm_private_dns_zone_virtual_network_link.dns_link[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_private_dns_zone_virtual_network_link" "dns_link" {
+      [32m+[0m[0m id                    = (known after apply)
+      [32m+[0m[0m name                  = "vnet-dns-link"
+      [32m+[0m[0m private_dns_zone_name = "privatelink.bastion.azure.com"
+      [32m+[0m[0m registration_enabled  = false
+      [32m+[0m[0m resource_group_name   = "rg-azure-data-infra"
+      [32m+[0m[0m virtual_network_id    = (known after apply)
+    }
+
+[1m  # azurerm_private_endpoint.storage_private_link[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_private_endpoint" "storage_private_link" {
+      [32m+[0m[0m custom_dns_configs       = (known after apply)
+      [32m+[0m[0m id                       = (known after apply)
+      [32m+[0m[0m location                 = "westeurope"
+      [32m+[0m[0m name                     = "storage-private-link"
+      [32m+[0m[0m network_interface        = (known after apply)
+      [32m+[0m[0m private_dns_zone_configs = (known after apply)
+      [32m+[0m[0m resource_group_name      = "rg-azure-data-infra"
+      [32m+[0m[0m subnet_id                = (known after apply)
+
+      [32m+[0m[0m private_service_connection {
+          [32m+[0m[0m is_manual_connection           = false
+          [32m+[0m[0m name                           = "storage-link"
+          [32m+[0m[0m private_connection_resource_id = (known after apply)
+          [32m+[0m[0m private_ip_address             = (known after apply)
+          [32m+[0m[0m subresource_names              = [
+              [32m+[0m[0m "blob",
+            ]
+        }
+    }
+
 [1m  # azurerm_public_ip.bastion_ip[0m will be created
 [0m  [32m+[0m[0m resource "azurerm_public_ip" "bastion_ip" {
       [32m+[0m[0m allocation_method       = "Static"
@@ -519,6 +774,22 @@ Terraform will perform the following actions:
       [32m+[0m[0m ip_version              = "IPv4"
       [32m+[0m[0m location                = "westeurope"
       [32m+[0m[0m name                    = "bastion-ip"
+      [32m+[0m[0m resource_group_name     = "rg-azure-data-infra"
+      [32m+[0m[0m sku                     = "Standard"
+      [32m+[0m[0m sku_tier                = "Regional"
+    }
+
+[1m  # azurerm_public_ip.firewall_ip[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_public_ip" "firewall_ip" {
+      [32m+[0m[0m allocation_method       = "Static"
+      [32m+[0m[0m ddos_protection_mode    = "VirtualNetworkInherited"
+      [32m+[0m[0m fqdn                    = (known after apply)
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m idle_timeout_in_minutes = 4
+      [32m+[0m[0m ip_address              = (known after apply)
+      [32m+[0m[0m ip_version              = "IPv4"
+      [32m+[0m[0m location                = "westeurope"
+      [32m+[0m[0m name                    = "firewall-public-ip"
       [32m+[0m[0m resource_group_name     = "rg-azure-data-infra"
       [32m+[0m[0m sku                     = "Standard"
       [32m+[0m[0m sku_tier                = "Regional"
@@ -553,6 +824,22 @@ Terraform will perform the following actions:
       [32m+[0m[0m name                    = "public-vm-ip"
       [32m+[0m[0m resource_group_name     = "rg-azure-data-infra"
       [32m+[0m[0m sku                     = "Standard"
+      [32m+[0m[0m sku_tier                = "Regional"
+    }
+
+[1m  # azurerm_public_ip.vpn_gateway_ip[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_public_ip" "vpn_gateway_ip" {
+      [32m+[0m[0m allocation_method       = "Dynamic"
+      [32m+[0m[0m ddos_protection_mode    = "VirtualNetworkInherited"
+      [32m+[0m[0m fqdn                    = (known after apply)
+      [32m+[0m[0m id                      = (known after apply)
+      [32m+[0m[0m idle_timeout_in_minutes = 4
+      [32m+[0m[0m ip_address              = (known after apply)
+      [32m+[0m[0m ip_version              = "IPv4"
+      [32m+[0m[0m location                = "westeurope"
+      [32m+[0m[0m name                    = "vpn-gateway-ip"
+      [32m+[0m[0m resource_group_name     = "rg-azure-data-infra"
+      [32m+[0m[0m sku                     = "Basic"
       [32m+[0m[0m sku_tier                = "Regional"
     }
 
@@ -618,6 +905,30 @@ Terraform will perform the following actions:
         }
     }
 
+[1m  # azurerm_role_assignment.storage_account_contributor[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_role_assignment" "storage_account_contributor" {
+      [32m+[0m[0m id                               = (known after apply)
+      [32m+[0m[0m name                             = (known after apply)
+      [32m+[0m[0m principal_id                     = "9163f46d-82b8-4dd5-afc0-d9f912474a3d"
+      [32m+[0m[0m principal_type                   = (known after apply)
+      [32m+[0m[0m role_definition_id               = (known after apply)
+      [32m+[0m[0m role_definition_name             = "Storage Account Contributor"
+      [32m+[0m[0m scope                            = (known after apply)
+      [32m+[0m[0m skip_service_principal_aad_check = (known after apply)
+    }
+
+[1m  # azurerm_role_assignment.storage_blob_data_contributor[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_role_assignment" "storage_blob_data_contributor" {
+      [32m+[0m[0m id                               = (known after apply)
+      [32m+[0m[0m name                             = (known after apply)
+      [32m+[0m[0m principal_id                     = "9163f46d-82b8-4dd5-afc0-d9f912474a3d"
+      [32m+[0m[0m principal_type                   = (known after apply)
+      [32m+[0m[0m role_definition_id               = (known after apply)
+      [32m+[0m[0m role_definition_name             = "Storage Blob Data Contributor"
+      [32m+[0m[0m scope                            = (known after apply)
+      [32m+[0m[0m skip_service_principal_aad_check = (known after apply)
+    }
+
 [1m  # azurerm_role_assignment.synapse_rbac[0m will be created
 [0m  [32m+[0m[0m resource "azurerm_role_assignment" "synapse_rbac" {
       [32m+[0m[0m id                               = (known after apply)
@@ -628,6 +939,24 @@ Terraform will perform the following actions:
       [32m+[0m[0m role_definition_name             = "Synapse Administrator"
       [32m+[0m[0m scope                            = (known after apply)
       [32m+[0m[0m skip_service_principal_aad_check = (known after apply)
+    }
+
+[1m  # azurerm_route_table.firewall_route_table[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_route_table" "firewall_route_table" {
+      [32m+[0m[0m disable_bgp_route_propagation = false
+      [32m+[0m[0m id                            = (known after apply)
+      [32m+[0m[0m location                      = "westeurope"
+      [32m+[0m[0m name                          = "firewall-route-table"
+      [32m+[0m[0m resource_group_name           = "rg-azure-data-infra"
+      [32m+[0m[0m route                         = [
+          [32m+[0m[0m {
+              [32m+[0m[0m address_prefix         = "0.0.0.0/0"
+              [32m+[0m[0m name                   = "DefaultRoute"
+              [32m+[0m[0m next_hop_in_ip_address = (known after apply)
+              [32m+[0m[0m next_hop_type          = "VirtualAppliance"
+            },
+        ]
+      [32m+[0m[0m subnets                       = (known after apply)
     }
 
 [1m  # azurerm_storage_account.storage[0m will be created
@@ -702,6 +1031,18 @@ Terraform will perform the following actions:
       [32m+[0m[0m share_properties (known after apply)
     }
 
+[1m  # azurerm_storage_account_network_rules.network_rules[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_storage_account_network_rules" "network_rules" {
+      [32m+[0m[0m bypass                     = [
+          [32m+[0m[0m "AzureServices",
+        ]
+      [32m+[0m[0m default_action             = "Allow"
+      [32m+[0m[0m id                         = (known after apply)
+      [32m+[0m[0m ip_rules                   = (known after apply)
+      [32m+[0m[0m storage_account_id         = (known after apply)
+      [32m+[0m[0m virtual_network_subnet_ids = (known after apply)
+    }
+
 [1m  # azurerm_storage_blob.data_blob[0m will be created
 [0m  [32m+[0m[0m resource "azurerm_storage_blob" "data_blob" {
       [32m+[0m[0m access_tier            = (known after apply)
@@ -771,6 +1112,36 @@ Terraform will perform the following actions:
       [32m+[0m[0m virtual_network_name                           = "VNet-Project"
     }
 
+[1m  # azurerm_subnet.firewall_subnet[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_subnet" "firewall_subnet" {
+      [32m+[0m[0m address_prefixes                               = [
+          [32m+[0m[0m "10.0.5.0/24",
+        ]
+      [32m+[0m[0m enforce_private_link_endpoint_network_policies = (known after apply)
+      [32m+[0m[0m enforce_private_link_service_network_policies  = (known after apply)
+      [32m+[0m[0m id                                             = (known after apply)
+      [32m+[0m[0m name                                           = "AzureFirewallSubnet"
+      [32m+[0m[0m private_endpoint_network_policies_enabled      = (known after apply)
+      [32m+[0m[0m private_link_service_network_policies_enabled  = (known after apply)
+      [32m+[0m[0m resource_group_name                            = "rg-azure-data-infra"
+      [32m+[0m[0m virtual_network_name                           = "VNet-Project"
+    }
+
+[1m  # azurerm_subnet.gateway_subnet[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_subnet" "gateway_subnet" {
+      [32m+[0m[0m address_prefixes                               = [
+          [32m+[0m[0m "10.0.6.0/24",
+        ]
+      [32m+[0m[0m enforce_private_link_endpoint_network_policies = (known after apply)
+      [32m+[0m[0m enforce_private_link_service_network_policies  = (known after apply)
+      [32m+[0m[0m id                                             = (known after apply)
+      [32m+[0m[0m name                                           = "GatewaySubnet"
+      [32m+[0m[0m private_endpoint_network_policies_enabled      = (known after apply)
+      [32m+[0m[0m private_link_service_network_policies_enabled  = (known after apply)
+      [32m+[0m[0m resource_group_name                            = "rg-azure-data-infra"
+      [32m+[0m[0m virtual_network_name                           = "VNet-Project"
+    }
+
 [1m  # azurerm_subnet.private[0m will be created
 [0m  [32m+[0m[0m resource "azurerm_subnet" "private" {
       [32m+[0m[0m address_prefixes                               = [
@@ -779,10 +1150,13 @@ Terraform will perform the following actions:
       [32m+[0m[0m enforce_private_link_endpoint_network_policies = (known after apply)
       [32m+[0m[0m enforce_private_link_service_network_policies  = (known after apply)
       [32m+[0m[0m id                                             = (known after apply)
-      [32m+[0m[0m name                                           = "Private-Subnet"
+      [32m+[0m[0m name                                           = "private-subnet"
       [32m+[0m[0m private_endpoint_network_policies_enabled      = (known after apply)
       [32m+[0m[0m private_link_service_network_policies_enabled  = (known after apply)
       [32m+[0m[0m resource_group_name                            = "rg-azure-data-infra"
+      [32m+[0m[0m service_endpoints                              = [
+          [32m+[0m[0m "Microsoft.Storage",
+        ]
       [32m+[0m[0m virtual_network_name                           = "VNet-Project"
     }
 
@@ -820,6 +1194,35 @@ Terraform will perform the following actions:
       [32m+[0m[0m id                        = (known after apply)
       [32m+[0m[0m network_security_group_id = (known after apply)
       [32m+[0m[0m subnet_id                 = (known after apply)
+    }
+
+[1m  # azurerm_subnet_route_table_association.firewall_route_assoc["databricks"][0m will be created
+[0m  [32m+[0m[0m resource "azurerm_subnet_route_table_association" "firewall_route_assoc" {
+      [32m+[0m[0m id             = (known after apply)
+      [32m+[0m[0m route_table_id = (known after apply)
+      [32m+[0m[0m subnet_id      = (known after apply)
+    }
+
+[1m  # azurerm_subnet_route_table_association.firewall_route_assoc["private"][0m will be created
+[0m  [32m+[0m[0m resource "azurerm_subnet_route_table_association" "firewall_route_assoc" {
+      [32m+[0m[0m id             = (known after apply)
+      [32m+[0m[0m route_table_id = (known after apply)
+      [32m+[0m[0m subnet_id      = (known after apply)
+    }
+
+[1m  # azurerm_subnet_route_table_association.firewall_route_assoc["public"][0m will be created
+[0m  [32m+[0m[0m resource "azurerm_subnet_route_table_association" "firewall_route_assoc" {
+      [32m+[0m[0m id             = (known after apply)
+      [32m+[0m[0m route_table_id = (known after apply)
+      [32m+[0m[0m subnet_id      = (known after apply)
+    }
+
+[1m  # azurerm_synapse_private_link_hub.private_link[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_synapse_private_link_hub" "private_link" {
+      [32m+[0m[0m id                  = (known after apply)
+      [32m+[0m[0m location            = "westeurope"
+      [32m+[0m[0m name                = "synapseprivatelink"
+      [32m+[0m[0m resource_group_name = "rg-azure-data-infra"
     }
 
 [1m  # azurerm_synapse_sql_pool.sql_pool[0m will be created
@@ -867,6 +1270,29 @@ Terraform will perform the following actions:
       [32m+[0m[0m name                = "VNet-Project"
       [32m+[0m[0m resource_group_name = "rg-azure-data-infra"
       [32m+[0m[0m subnet              = (known after apply)
+    }
+
+[1m  # azurerm_virtual_network_gateway.vpn_gateway[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_virtual_network_gateway" "vpn_gateway" {
+      [32m+[0m[0m active_active       = false
+      [32m+[0m[0m enable_bgp          = false
+      [32m+[0m[0m generation          = (known after apply)
+      [32m+[0m[0m id                  = (known after apply)
+      [32m+[0m[0m location            = "westeurope"
+      [32m+[0m[0m name                = "vpn-gateway"
+      [32m+[0m[0m resource_group_name = "rg-azure-data-infra"
+      [32m+[0m[0m sku                 = "VpnGw2"
+      [32m+[0m[0m type                = "Vpn"
+      [32m+[0m[0m vpn_type            = "RouteBased"
+
+      [32m+[0m[0m bgp_settings (known after apply)
+
+      [32m+[0m[0m ip_configuration {
+          [32m+[0m[0m name                          = "vpn-gateway-ipconfig"
+          [32m+[0m[0m private_ip_address_allocation = "Dynamic"
+          [32m+[0m[0m public_ip_address_id          = (known after apply)
+          [32m+[0m[0m subnet_id                     = (known after apply)
+        }
     }
 
 [1m  # null_resource.add_principal_to_admins[0m will be created
@@ -949,7 +1375,7 @@ Terraform will perform the following actions:
       [32m+[0m[0m upper       = false
     }
 
-[1mPlan:[0m 54 to add, 0 to change, 0 to destroy.
+[1mPlan:[0m 81 to add, 0 to change, 0 to destroy.
 [0m
 Changes to Outputs:
   [32m+[0m[0m databricks_workspace_url = (known after apply)

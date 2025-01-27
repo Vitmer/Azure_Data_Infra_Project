@@ -8,16 +8,6 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# 1. Resource Group
-resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name
-  location = var.location
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
 terraform {
   required_providers {
     databricks = {
@@ -32,6 +22,16 @@ terraform {
       source  = "hashicorp/null"
       version = "~> 3.0"
     }
+  }
+}
+
+# 1. Resource Group
+resource "azurerm_resource_group" "rg" {
+  name     = var.resource_group_name
+  location = var.location
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -70,7 +70,7 @@ resource "azurerm_monitor_diagnostic_setting" "vnet_logs" {
 
 # 3. Public Subnet
 resource "azurerm_subnet" "public" {
-  name                 = "Public-Subnet"  # Старое имя Public Subnet
+  name                 = "Public-Subnet"  
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.1.0/24"]
@@ -147,7 +147,7 @@ resource "azurerm_public_ip" "nat_gateway_ip" {
 
 # 8. Public IP for Bastion
 resource "azurerm_public_ip" "bastion_ip" {
-  name                = "bastion-ip"   # Старое имя Bastion IP
+  name                = "bastion-ip"   
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   allocation_method   = "Static"
@@ -515,4 +515,103 @@ resource "azurerm_monitor_action_group" "email_alerts" {
     name          = "AdminEmail"
     email_address = "admin@example.com"
   }
+}
+
+# 51. Azure Firewall
+resource "azurerm_firewall" "firewall" {
+  name                = "firewall-project"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku_name            = "AZFW_VNet"
+  sku_tier            = "Standard"
+
+  ip_configuration {
+    name                 = "firewall-ip-config"
+    subnet_id            = azurerm_subnet.firewall_subnet.id
+    public_ip_address_id = azurerm_public_ip.firewall_ip.id
+  }
+
+  depends_on = [azurerm_public_ip.firewall_ip]
+}
+
+# 52. Public IP for Firewall
+resource "azurerm_public_ip" "firewall_ip" {
+  name                = "firewall-public-ip"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+# 53. Subnet for Azure Firewall
+resource "azurerm_subnet" "firewall_subnet" {
+  name                 = "AzureFirewallSubnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.5.0/24"]
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# 54. Route Table for Firewall
+resource "azurerm_route_table" "firewall_route_table" {
+  name                = "firewall-route-table"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  route {
+    name                   = "DefaultRoute"
+    address_prefix         = "0.0.0.0/0"
+    next_hop_type          = "VirtualAppliance"
+    next_hop_in_ip_address = azurerm_firewall.firewall.ip_configuration[0].private_ip_address
+  }
+}
+
+# 55. Associate Route Table with Subnets
+resource "azurerm_subnet_route_table_association" "firewall_route_assoc" {
+  for_each = {
+    public    = azurerm_subnet.public.id
+    private   = azurerm_subnet.private.id
+    databricks = azurerm_subnet.databricks.id
+  }
+
+  subnet_id      = each.value
+  route_table_id = azurerm_route_table.firewall_route_table.id
+}
+
+# 56. VPN Gateway
+resource "azurerm_virtual_network_gateway" "vpn_gateway" {
+  name                = "vpn-gateway"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  type                = "Vpn"
+  vpn_type            = "RouteBased"
+  enable_bgp          = false
+  active_active       = false
+  sku                 = "VpnGw2"
+
+  ip_configuration {
+    name                          = "vpn-gateway-ipconfig"
+    public_ip_address_id          = azurerm_public_ip.vpn_gateway_ip.id
+    private_ip_address_allocation = "Dynamic"
+    subnet_id                     = azurerm_subnet.gateway_subnet.id
+  }
+}
+
+# 57. Public IP for VPN Gateway
+resource "azurerm_public_ip" "vpn_gateway_ip" {
+  name                = "vpn-gateway-ip"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  allocation_method   = "Dynamic"
+}
+
+# 58. Gateway Subnet
+resource "azurerm_subnet" "gateway_subnet" {
+  name                 = "GatewaySubnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.6.0/24"]
 }
