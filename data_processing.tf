@@ -1,4 +1,6 @@
-# 24. Azure Data Factory
+# 13. Data Factory
+
+# 43. Azure Data Factory
 resource "azurerm_data_factory" "example" {
   name                = "unique-datafactory-${random_string.suffix_processing.result}"
   resource_group_name = azurerm_resource_group.rg.name
@@ -9,22 +11,8 @@ resource "azurerm_data_factory" "example" {
   }
 }
 
-# Monitor ADF Diagnostics
-resource "azurerm_monitor_diagnostic_setting" "data_factory_logs" {
-  name                       = "adf-logs"
-  target_resource_id         = azurerm_data_factory.example.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.logs.id
 
-  enabled_log {
-    category = "PipelineRuns"
-  }
-
-  enabled_log {
-    category = "ActivityRuns"
-  }
-}
-
-# 25. ETL Pipeline
+# 44. ETL Pipeline
 resource "azurerm_data_factory_pipeline" "etl_pipeline" {
   depends_on = [
     azurerm_data_factory_dataset_azure_blob.example,
@@ -52,7 +40,7 @@ resource "azurerm_data_factory_pipeline" "etl_pipeline" {
   ])
 }
 
-# 26. Databricks ETL Pipeline
+# 45. Databricks ETL Pipeline
 resource "azurerm_data_factory_pipeline" "databricks_etl" {
 depends_on = [
     azurerm_data_factory_dataset_azure_blob.example,
@@ -79,29 +67,7 @@ depends_on = [
   ])
 }
 
-# 27. Linked Service for Blob Storage
-resource "azurerm_data_factory_linked_service_azure_blob_storage" "blob_service_link" {
-  name              = "blob-service-link"
-  data_factory_id   = azurerm_data_factory.example.id
-  connection_string = azurerm_storage_account.storage.primary_connection_string
-}
-
-# 28. Linked Service for Data Lake Gen2
-resource "azurerm_data_factory_linked_service_azure_blob_storage" "data_lake_service_link" {
-  name              = "data-lake-service-link"
-  data_factory_id   = azurerm_data_factory.example.id
-  connection_string = azurerm_storage_account.storage.primary_connection_string
-}
-
-# 30. Dataset for Synapse SQL Table
-resource "azurerm_data_factory_dataset_sql_server_table" "synapse_dataset" {
-  name                = "synapse-dataset"
-  data_factory_id     = azurerm_data_factory.example.id
-  linked_service_name = azurerm_data_factory_linked_service_sql_server.example.name
-  table_name          = "etl_output_table"
-}
-
-# 31. Dataset for Azure Blob
+# 46. Dataset for Azure Blob
 resource "azurerm_data_factory_dataset_azure_blob" "example" {
   name                   = "example-blob-dataset"
   data_factory_id        = azurerm_data_factory.example.id
@@ -109,7 +75,53 @@ resource "azurerm_data_factory_dataset_azure_blob" "example" {
   path                   = "example-folder/example-file.csv"
 }
 
-# 36. Databricks Workspace
+# 47. Dataset for SQL Server Table in Azure Data Factory
+resource "azurerm_data_factory_dataset_sql_server_table" "analytics_synapse_dataset" {
+  name                = "analytics-dataset"
+  data_factory_id     = azurerm_data_factory.example.id
+  linked_service_name = azurerm_data_factory_linked_service_sql_server.example.name
+  table_name          = "etl_output_table"
+}
+
+# 48. Dataset for Synapse SQL Table
+resource "azurerm_data_factory_dataset_sql_server_table" "synapse_dataset" {
+  name                = "synapse-dataset"
+  data_factory_id     = azurerm_data_factory.example.id
+  linked_service_name = azurerm_data_factory_linked_service_sql_server.example.name
+  table_name          = "etl_output_table"
+}
+
+# 49. Linked Service for Blob Storage
+resource "azurerm_data_factory_linked_service_azure_blob_storage" "blob_service_link" {
+  name              = "blob-service-link"
+  data_factory_id   = azurerm_data_factory.example.id
+  connection_string = azurerm_storage_account.storage.primary_connection_string
+}
+
+# 50. Linked Service for Data Lake Gen2
+resource "azurerm_data_factory_linked_service_azure_blob_storage" "data_lake_service_link" {
+  name              = "data-lake-service-link"
+  data_factory_id   = azurerm_data_factory.example.id
+  connection_string = azurerm_storage_account.storage.primary_connection_string
+}
+
+# 51. Dataset for Synapse in Data Factory
+resource "azurerm_data_factory_linked_service_sql_server" "example" {
+  name              = "sqlserver-link"
+  data_factory_id   = azurerm_data_factory.example.id
+  connection_string = "Server=tcp:${azurerm_mssql_server.sql_server.name}.database.windows.net,1433;Database=etl_db;Authentication=ActiveDirectoryPassword;"
+}
+
+# 52. Linked Service for Synapse in Data Factory
+resource "azurerm_data_factory_linked_service_synapse" "synapse_link" {
+  name              = "synapse-linked-service"
+  data_factory_id   = azurerm_data_factory.example.id
+  connection_string = "Server=tcp:${azurerm_mssql_server.sql_server.name}.database.windows.net,1433;Authentication=ActiveDirectoryPassword;"
+}
+
+# 14. Databricks
+
+# 53. Databricks Workspace
 resource "azurerm_databricks_workspace" "example" {
   name                = "databricks-workspace"
   resource_group_name = azurerm_resource_group.rg.name
@@ -245,21 +257,9 @@ resource "null_resource" "create_databricks_cluster" {
   }
 }
 
-# 38. Random Suffix for Unique Naming
+# Random Suffix for Unique Naming
 resource "random_string" "suffix_processing" {
   length  = 6
   special = false
   upper   = false
-}
-
-# Подключение логов Databricks к Log Analytics Workspace
-resource "azurerm_monitor_diagnostic_setting" "databricks_logs" {
-  name                       = "databricks-logs"
-  target_resource_id         = azurerm_databricks_workspace.example.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.logs.id
-
-  metric {
-    category = "AllMetrics"
-    enabled  = true
-  }
 }
