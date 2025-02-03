@@ -33,7 +33,7 @@ resource "azurerm_resource_group" "rg" {
   location = var.location
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
@@ -51,7 +51,7 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = azurerm_resource_group.rg.name
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
@@ -63,7 +63,7 @@ resource "azurerm_subnet" "bastion_subnet" {
   address_prefixes     = ["10.0.1.0/24"]
 
   lifecycle {
-    prevent_destroy = true
+   prevent_destroy = false
   }
 }
 
@@ -75,7 +75,7 @@ resource "azurerm_subnet" "firewall_subnet" {
   address_prefixes     = ["10.0.2.0/24"]
 
   lifecycle {
-    prevent_destroy = true
+  prevent_destroy = false
   }
 }
 
@@ -135,8 +135,8 @@ resource "azurerm_public_ip" "bastion_ip" {
   sku                 = "Standard"
 
   lifecycle {
-  prevent_destroy = true
-}
+  prevent_destroy = false
+  }
 }
 
 # 11. Public IP for Firewall
@@ -157,7 +157,7 @@ resource "azurerm_public_ip" "nat_gateway_ip" {
   sku                 = "Standard"
 
   lifecycle {
-  prevent_destroy = true
+  prevent_destroy = false
   }
 }
 
@@ -170,7 +170,7 @@ resource "azurerm_public_ip" "public_vm_ip" {
   sku                 = "Standard"
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
@@ -179,7 +179,8 @@ resource "azurerm_public_ip" "vpn_gateway_ip" {
   name                = "vpn-gateway-ip"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 # 4. Route Table
@@ -291,7 +292,7 @@ resource "azurerm_network_security_group" "nsg_public" {
   }
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
@@ -303,7 +304,7 @@ resource "azurerm_subnet_network_security_group_association" "nsg_public_assoc" 
   depends_on =[azurerm_network_security_group.nsg_public]
 
   lifecycle {
-    prevent_destroy = true
+  prevent_destroy = false
   }
 }
 
@@ -344,7 +345,7 @@ resource "azurerm_bastion_host" "bastion" {
   }
 
   lifecycle {
-    prevent_destroy = true
+  prevent_destroy = false
   }
 }
 
@@ -398,7 +399,7 @@ resource "azurerm_network_interface" "private_nic" {
   }
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
@@ -418,16 +419,9 @@ resource "azurerm_network_interface" "public_nic" {
   }
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
-
-
-
-
-
-
-
 
 # 22. Virtual Machine in Public Subnet
 resource "azurerm_linux_virtual_machine" "public_vm" {
@@ -461,7 +455,7 @@ resource "azurerm_linux_virtual_machine" "public_vm" {
   }
 
   lifecycle {
-    prevent_destroy = true
+  prevent_destroy = false
   }
 }
 
@@ -497,7 +491,7 @@ resource "azurerm_linux_virtual_machine" "private_vm" {
   }
 
  lifecycle {
-    prevent_destroy = true
+  prevent_destroy = false
   }
 }
 

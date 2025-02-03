@@ -50,6 +50,11 @@ Designed for **real-world applications**, this infrastructure can be utilized in
 
 ---
 
+## Diagram
+The following diagram provides an overview of the project's architecture:
+
+![Azure Infrastructure Diagram](azure_infrastructure_diagram.png)
+
 ## Use Cases (Real-World Applications)
 
 ### **1. Financial Data Analytics (FinTech, Banking, Investments)**  

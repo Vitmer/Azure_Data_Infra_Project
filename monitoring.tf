@@ -38,13 +38,28 @@ resource "azurerm_monitor_diagnostic_setting" "data_factory_logs" {
 
 # 39. Databricks к Log Analytics Workspace
 resource "azurerm_monitor_diagnostic_setting" "databricks_logs" {
-  name                       = "databricks-logs"
+  name               = "databricks-logs"
   target_resource_id         = azurerm_databricks_workspace.example.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.logs.id
 
-  metric {
-    category = "AllMetrics"
-    enabled  = true
+  enabled_log {
+    category = "clusters"
+  }
+
+  enabled_log {
+    category = "jobs"
+  }
+
+  enabled_log {
+    category = "notebook"
+  }
+
+  enabled_log {
+    category = "dbfs"
+  }
+
+  enabled_log {
+    category = "workspace"
   }
 }
 

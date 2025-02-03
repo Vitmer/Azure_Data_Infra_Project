@@ -63,3 +63,9 @@ variable "create_access_policy" {
   type        = bool
   default     = true
 }
+
+variable "enable_prevent_destroy" {
+  description = "Enable or disable the prevent_destroy lifecycle for resources"
+  type        = bool
+  default     = true
+}
