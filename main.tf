@@ -249,53 +249,6 @@ resource "azurerm_subnet_nat_gateway_association" "databricks_nat_assoc" {
 
 # 6. Network Security Group
 
-# 21. Network Security Group (NSG) for Public Subnet
-resource "azurerm_network_security_group" "nsg_public" {
-  name                = "nsg-public"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  security_rule {
-    name                       = "Allow-SSH"
-    priority                   = 1001
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "Allow-RDP"
-    priority                   = 1002
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "3389"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "Allow-NAT-Outbound"
-    priority                   = 1100
-    direction                  = "Outbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "Internet"
-  }
-
-  lifecycle {
-    prevent_destroy = false
-  }
-}
-
 # 22. Associate NSG with Public Subnet
 resource "azurerm_subnet_network_security_group_association" "nsg_public_assoc" {
   subnet_id                 = azurerm_subnet.public.id
@@ -305,6 +258,16 @@ resource "azurerm_subnet_network_security_group_association" "nsg_public_assoc" 
 
   lifecycle {
   prevent_destroy = false
+  }
+}
+
+# Associate Network Security Group with Private Subnet
+resource "azurerm_subnet_network_security_group_association" "nsg_private_assoc" {
+  subnet_id                 = azurerm_subnet.private.id  # Private Subnet
+  network_security_group_id = azurerm_network_security_group.nsg_private.id
+
+  lifecycle {
+    prevent_destroy = false
   }
 }
 

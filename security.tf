@@ -1,3 +1,141 @@
+# 6. Network Security Group
+
+# 21. Network Security Group (NSG) for Public Subnet
+resource "azurerm_network_security_group" "nsg_public" {
+  name                = "nsg-public"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  security_rule {
+    name                       = "Allow-SSH"
+    priority                   = 1001
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "Allow-RDP"
+    priority                   = 1002
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "Allow-NAT-Outbound"
+    priority                   = 1100
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "Internet"
+  }
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+# Create a Network Security Group for Private Subnet
+resource "azurerm_network_security_group" "nsg_private" {
+  name                = "nsg-private"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  # Block all inbound traffic by default (secure by design)
+  security_rule {
+    name                       = "Deny-All-Inbound"
+    priority                   = 1000
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  # Allow internal communication within the Virtual Network (VNet)
+  security_rule {
+    name                       = "Allow-VNet-Internal"
+    priority                   = 1100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+
+  # Allow necessary outbound traffic (e.g., API requests, storage)
+  security_rule {
+    name                       = "Allow-API-Access"
+    priority                   = 1200
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "*"
+    destination_address_prefix = "api.example.com"
+  }
+}
+
+# Allow incoming SSH and HTTPS traffic through Firewall
+resource "azurerm_firewall_network_rule_collection" "firewall_inbound" {
+  name                = "Firewall-Inbound-Rules"
+  azure_firewall_name = azurerm_firewall.firewall.name
+  resource_group_name = azurerm_resource_group.rg.name
+  priority            = 100  # Lower number = higher priority
+  action              = "Allow"
+
+  rule {
+    name                  = "Allow-SSH"
+    source_addresses      = ["1.2.3.4"]  # Replace with admin's IP
+    destination_addresses = ["*"]
+    destination_ports     = ["22"]
+    protocols             = ["TCP"]
+  }
+
+  rule {
+    name                  = "Allow-HTTPS"
+    source_addresses      = ["*"]
+    destination_addresses = ["*"]
+    destination_ports     = ["443"]
+    protocols             = ["TCP"]
+  }
+}
+
+# Block all other incoming traffic
+resource "azurerm_firewall_network_rule_collection" "firewall_deny_all_inbound" {
+  name                = "Firewall-Deny-All-Inbound"
+  azure_firewall_name = azurerm_firewall.firewall.name
+  resource_group_name = azurerm_resource_group.rg.name
+  priority            = 200
+  action              = "Deny"
+
+  rule {
+    name                  = "Block-All-Traffic"
+    source_addresses      = ["*"]
+    destination_addresses = ["*"]
+    destination_ports     = ["*"]
+    protocols             = ["TCP", "UDP"]
+  }
+}
+
+
 # 9. Key Vault
 
 # 25. Key Vault

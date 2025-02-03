@@ -112,3 +112,18 @@ resource "azurerm_monitor_metric_alert" "public_vm_cpu_alert" {
     threshold        = 80
   }
 }
+
+# Enable logging for firewall
+resource "azurerm_monitor_diagnostic_setting" "firewall_logs" {
+  name                        = "Firewall-Logging"
+  target_resource_id          = azurerm_firewall.firewall.id
+  log_analytics_workspace_id  = azurerm_log_analytics_workspace.example.id
+
+  enabled_log {
+    category = "AzureFirewallNetworkRule"
+  }
+
+  enabled_log {
+    category = "AzureFirewallApplicationRule"
+  }
+}

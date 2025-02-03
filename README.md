@@ -134,8 +134,18 @@ The following diagram provides an overview of the project's architecture:
 20. azurerm_subnet_nat_gateway_association.databricks_nat_assoc — associate the NAT Gateway with the Databricks Subnet.
 
 ### 6. Network Security Group
+
+## security.tf:
+
 21. azurerm_network_security_group.nsg_public — create an NSG for the public Subnet.
+21. azurerm_network_security_group.nsg_private — create an NSG for the private Subnet.
+    azurerm_firewall_network_rule_collection.firewall_inbound — Allow incoming SSH and HTTPS traffic through Firewall
+    azurerm_firewall_network_rule_collection.firewall_deny_all_inbound — Block all other incoming traffic
+
+## main.tf:
+
 22. azurerm_subnet_network_security_group_association.nsg_public_assoc — associate the NSG with the public Subnet.
+22. azurerm_subnet_network_security_group_association.nsg_private_assoc — associate the NSG with the private Subnet.
 
 ### 7. Firewall
 23. azurerm_firewall.firewall — create a Firewall associated with the Subnet and Public IP.
@@ -176,6 +186,7 @@ The following diagram provides an overview of the project's architecture:
 40. azurerm_monitor_diagnostic_setting.vnet_logs — enable logging for the VNet.
 41. azurerm_monitor_metric_alert.private_vm_cpu_alert — configure a CPU alert for the private VM.
 42. azurerm_monitor_metric_alert.public_vm_cpu_alert — configure a CPU alert for the public VM.
+    azurerm_monitor_diagnostic_setting.firewall_logs - enable logging a Firewall
 
 ## data_processing.tf
 
