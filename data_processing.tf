@@ -11,12 +11,35 @@ resource "azurerm_data_factory" "example" {
   }
 }
 
+# Dataset для Raw Data (Azure Data Factory)
+resource "azurerm_data_factory_dataset_azure_blob" "datalake_raw_dataset" {
+  name                = "datalake-raw-dataset"
+  data_factory_id     = azurerm_data_factory.example.id
+  linked_service_name = azurerm_data_factory_linked_service_azure_blob_storage.data_lake_service_link.name
+  path                = "datalake-filesystem/raw-data/"
+}
+
+# Dataset для Processed Data
+resource "azurerm_data_factory_dataset_azure_blob" "datalake_processed_dataset" {
+  name                = "datalake-processed-dataset"
+  data_factory_id     = azurerm_data_factory.example.id
+  linked_service_name = azurerm_data_factory_linked_service_azure_blob_storage.data_lake_service_link.name
+  path                = "datalake-filesystem/processed-data/"
+}
+
+# Dataset для Curated Data
+resource "azurerm_data_factory_dataset_azure_blob" "datalake_curated_dataset" {
+  name                = "datalake-curated-dataset"
+  data_factory_id     = azurerm_data_factory.example.id
+  linked_service_name = azurerm_data_factory_linked_service_azure_blob_storage.data_lake_service_link.name
+  path                = "datalake-filesystem/curated-data/"
+}
 
 # 44. ETL Pipeline
 resource "azurerm_data_factory_pipeline" "etl_pipeline" {
   depends_on = [
     azurerm_data_factory_dataset_azure_blob.example,
-    azurerm_data_factory_dataset_sql_server_table.synapse_dataset
+    azurerm_data_factory_dataset_azure_blob.datalake_raw_dataset
   ]
 
   name            = "etl-pipeline"
@@ -24,18 +47,40 @@ resource "azurerm_data_factory_pipeline" "etl_pipeline" {
 
   activities_json = jsonencode([
     {
-      "name": "CopyBlobToDataLake",
+      "name": "CopyBlobToRawData",
       "type": "Copy",
       "inputs": [
-        {
-          "name": azurerm_data_factory_dataset_azure_blob.example.name
-        }
+        { "name": azurerm_data_factory_dataset_azure_blob.example.name }
       ],
       "outputs": [
-        {
-          "name": "data-lake-dataset"
-        }
+        { "name": azurerm_data_factory_dataset_azure_blob.datalake_raw_dataset.name }
       ]
+    },
+    {
+      "name": "TransformRawToProcessed",
+      "type": "DatabricksNotebook",
+      "inputs": [
+        { "name": azurerm_data_factory_dataset_azure_blob.datalake_raw_dataset.name }
+      ],
+      "outputs": [
+        { "name": azurerm_data_factory_dataset_azure_blob.datalake_processed_dataset.name }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Users/example@databricks.com/CleaningNotebook"
+      }
+    },
+    {
+      "name": "TransformProcessedToCurated",
+      "type": "DatabricksNotebook",
+      "inputs": [
+        { "name": azurerm_data_factory_dataset_azure_blob.datalake_processed_dataset.name }
+      ],
+      "outputs": [
+        { "name": azurerm_data_factory_dataset_azure_blob.datalake_curated_dataset.name }
+      ],
+      "notebook_task": {
+        "notebook_path": "/Users/example@databricks.com/AggregationNotebook"
+      }
     }
   ])
 }
@@ -262,4 +307,28 @@ resource "random_string" "suffix_processing" {
   length  = 6
   special = false
   upper   = false
+}
+
+
+resource "azurerm_data_factory_pipeline" "curated_to_synapse" {
+  depends_on = [
+    azurerm_data_factory_dataset_azure_blob.datalake_curated_dataset,
+    azurerm_data_factory_dataset_sql_server_table.synapse_curated_dataset
+  ]
+
+  name            = "curated-to-synapse"
+  data_factory_id = azurerm_data_factory.example.id
+
+  activities_json = jsonencode([
+    {
+      "name": "CopyCuratedDataToSynapse",
+      "type": "Copy",
+      "inputs": [
+        { "name": azurerm_data_factory_dataset_azure_blob.datalake_curated_dataset.name }
+      ],
+      "outputs": [
+        { "name": azurerm_data_factory_dataset_sql_server_table.synapse_curated_dataset.name }
+      ]
+    }
+  ])
 }

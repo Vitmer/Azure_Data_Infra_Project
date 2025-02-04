@@ -1,3 +1,16 @@
+resource "azurerm_data_factory_linked_service_azure_blob_storage" "synapse_datalake_service" {
+  name              = "synapse-datalake-service"
+  data_factory_id   = azurerm_data_factory.example.id
+  connection_string = azurerm_storage_account.storage.primary_connection_string
+}
+
+resource "azurerm_data_factory_dataset_sql_server_table" "synapse_curated_dataset" {
+  name                = "synapse-curated-dataset"
+  data_factory_id     = azurerm_data_factory.example.id
+  linked_service_name = azurerm_data_factory_linked_service_azure_blob_storage.synapse_datalake_service.name
+  table_name          = "curated_data_table"
+}
+
 #15. Synapse
 
 # 54. Synapse Workspace

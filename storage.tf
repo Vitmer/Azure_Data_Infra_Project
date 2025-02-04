@@ -6,7 +6,7 @@ resource "azurerm_storage_account" "storage" {
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
-  account_replication_type = "LRS"
+  account_replication_type = "ZRS" #LRS (Locally Redundant Storage), ZRS (Zone Redundant Storage), GRS (Geo-Redundant Storage)
   is_hns_enabled           = true
 
   lifecycle {
@@ -63,4 +63,28 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "data_lake_filesystem" {
   ]
 
   #depends_on = [azurerm_storage_account.storage]
+}
+
+# Папка Raw Data (Сырые данные)
+resource "azurerm_storage_data_lake_gen2_path" "raw_data" {
+  path               = "raw-data"
+  filesystem_name    = azurerm_storage_data_lake_gen2_filesystem.data_lake_filesystem.name
+  storage_account_id = azurerm_storage_account.storage.id
+  resource           = "directory"
+}
+
+# Папка Processed Data (Обработанные данные)
+resource "azurerm_storage_data_lake_gen2_path" "processed_data" {
+  path               = "processed-data"
+  filesystem_name    = azurerm_storage_data_lake_gen2_filesystem.data_lake_filesystem.name
+  storage_account_id = azurerm_storage_account.storage.id
+  resource           = "directory"
+}
+
+# Папка Curated Data (Финальные данные)
+resource "azurerm_storage_data_lake_gen2_path" "curated_data" {
+  path               = "curated-data"
+  filesystem_name    = azurerm_storage_data_lake_gen2_filesystem.data_lake_filesystem.name
+  storage_account_id = azurerm_storage_account.storage.id
+  resource           = "directory"
 }
