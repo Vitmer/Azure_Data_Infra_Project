@@ -526,6 +526,20 @@ resource "azurerm_backup_protected_vm" "protected_vm_vmss" {
   backup_policy_id          = azurerm_backup_policy_vm.vmss_backup_policy.id
 }
 
+/*resource "azurerm_private_endpoint" "databricks_private_link" {
+  name                = "databricks-private-link"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  subnet_id           = azurerm_subnet.private.id
+
+  private_service_connection {
+    name                           = "databricks-link"
+    private_connection_resource_id = azurerm_databricks_workspace.example.id
+    is_manual_connection           = false
+    subresource_names              = ["databricks_ui_api"]
+  }
+}*/
+
 # 50. Enable public network access for the Databricks workspace
 resource "null_resource" "enable_public_access" {
   provisioner "local-exec" {
