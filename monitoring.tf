@@ -63,6 +63,48 @@ resource "azurerm_monitor_diagnostic_setting" "databricks_logs" {
   }
 }
 
+resource "azurerm_monitor_diagnostic_setting" "nsg_logs" {
+  name                       = "nsg-diagnostics"
+  target_resource_id         = azurerm_network_security_group.nsg_public.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.logs.id
+
+  enabled_log {
+    category = "NetworkSecurityGroupEvent"
+  }
+
+  enabled_log {
+    category = "NetworkSecurityGroupRuleCounter"
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "firewall_logs" {
+  name                       = "firewall-diagnostics"
+  target_resource_id         = azurerm_firewall.firewall_project.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.logs.id
+
+  enabled_log {
+    category = "AzureFirewallApplicationRule"
+  }
+
+  enabled_log {
+    category = "AzureFirewallNetworkRule"
+  }
+
+  enabled_log {
+    category = "AzureFirewallDnsProxy"
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
 # 40. Enable logging for the VNet.
 resource "azurerm_monitor_diagnostic_setting" "vnet_logs" {
   name                       = "vnet-diagnostics"
