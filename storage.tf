@@ -41,17 +41,6 @@ resource "azurerm_storage_container" "data_container" {
   #depends_on = [azurerm_storage_account.storage]
 }
 
-# 31. Blob Storage
-resource "azurerm_storage_blob" "data_blob" {
-  name                   = "data-blob"
-  storage_account_name   = azurerm_storage_account.storage.name
-  storage_container_name = azurerm_storage_container.data_container.name
-  type                   = "Block"
-  source_content         = "Hello, this is a test file!"
-
-  depends_on = [azurerm_storage_container.data_container]
-}
-
 # 32. Data Lake Gen2 Filesystem
 resource "azurerm_storage_data_lake_gen2_filesystem" "data_lake_filesystem" {
   name               = "datalake-filesystem"

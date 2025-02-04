@@ -11,6 +11,29 @@ resource "azurerm_data_factory_dataset_sql_server_table" "synapse_curated_datase
   table_name          = "curated_data_table"
 }
 
+resource "azurerm_data_factory_pipeline" "curated_to_synapse" {
+  depends_on = [
+    azurerm_data_factory_dataset_azure_blob.datalake_curated_dataset,
+    azurerm_data_factory_dataset_sql_server_table.synapse_curated_dataset
+  ]
+
+  name            = "curated-to-synapse"
+  data_factory_id = azurerm_data_factory.example.id
+
+  activities_json = jsonencode([
+    {
+      "name": "CopyCuratedDataToSynapse",
+      "type": "Copy",
+      "inputs": [
+        { "name": azurerm_data_factory_dataset_azure_blob.datalake_curated_dataset.name }
+      ],
+      "outputs": [
+        { "name": azurerm_data_factory_dataset_sql_server_table.synapse_curated_dataset.name }
+      ]
+    }
+  ])
+}
+
 #15. Synapse
 
 # 54. Synapse Workspace

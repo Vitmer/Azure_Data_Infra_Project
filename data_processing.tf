@@ -1,3 +1,20 @@
+resource "azurerm_data_factory_linked_service_web" "source_api" {
+  name            = "source-api-link"
+  data_factory_id = azurerm_data_factory.example.id
+
+  url                 = "https://example.com/api/data" # Specify the API URL here
+  authentication_type = "Basic" 
+}
+
+resource "azurerm_data_factory_dataset_http" "source_api_dataset" {
+  name                = "source-api-dataset"
+  data_factory_id     = azurerm_data_factory.example.id
+  linked_service_name = azurerm_data_factory_linked_service_web.source_api.name
+
+  request_method = "GET" # Use the GET method if the API simply returns data
+  relative_url   = "/latest" # If the API supports versions or different endpoints
+}
+
 # 13. Data Factory
 
 # 43. Azure Data Factory
@@ -13,7 +30,7 @@ resource "azurerm_data_factory" "example" {
 
 # Dataset для Raw Data (Azure Data Factory)
 resource "azurerm_data_factory_dataset_azure_blob" "datalake_raw_dataset" {
-  name                = "datalake-raw-dataset"
+  name                = "data-lake-raw-dataset" 
   data_factory_id     = azurerm_data_factory.example.id
   linked_service_name = azurerm_data_factory_linked_service_azure_blob_storage.data_lake_service_link.name
   path                = "datalake-filesystem/raw-data/"
@@ -21,7 +38,7 @@ resource "azurerm_data_factory_dataset_azure_blob" "datalake_raw_dataset" {
 
 # Dataset для Processed Data
 resource "azurerm_data_factory_dataset_azure_blob" "datalake_processed_dataset" {
-  name                = "datalake-processed-dataset"
+  name                = "data-lake-processed-dataset"  
   data_factory_id     = azurerm_data_factory.example.id
   linked_service_name = azurerm_data_factory_linked_service_azure_blob_storage.data_lake_service_link.name
   path                = "datalake-filesystem/processed-data/"
@@ -29,7 +46,7 @@ resource "azurerm_data_factory_dataset_azure_blob" "datalake_processed_dataset" 
 
 # Dataset для Curated Data
 resource "azurerm_data_factory_dataset_azure_blob" "datalake_curated_dataset" {
-  name                = "datalake-curated-dataset"
+  name                = "data-lake-curated-dataset" 
   data_factory_id     = azurerm_data_factory.example.id
   linked_service_name = azurerm_data_factory_linked_service_azure_blob_storage.data_lake_service_link.name
   path                = "datalake-filesystem/curated-data/"
@@ -38,7 +55,6 @@ resource "azurerm_data_factory_dataset_azure_blob" "datalake_curated_dataset" {
 # 44. ETL Pipeline
 resource "azurerm_data_factory_pipeline" "etl_pipeline" {
   depends_on = [
-    azurerm_data_factory_dataset_azure_blob.example,
     azurerm_data_factory_dataset_azure_blob.datalake_raw_dataset
   ]
 
@@ -50,7 +66,7 @@ resource "azurerm_data_factory_pipeline" "etl_pipeline" {
       "name": "CopyBlobToRawData",
       "type": "Copy",
       "inputs": [
-        { "name": azurerm_data_factory_dataset_azure_blob.example.name }
+        { "name": azurerm_data_factory_dataset_http.source_api_dataset.name }
       ],
       "outputs": [
         { "name": azurerm_data_factory_dataset_azure_blob.datalake_raw_dataset.name }
@@ -86,46 +102,54 @@ resource "azurerm_data_factory_pipeline" "etl_pipeline" {
 }
 
 # 45. Databricks ETL Pipeline
-resource "azurerm_data_factory_pipeline" "databricks_etl" {
-depends_on = [
-    azurerm_data_factory_dataset_azure_blob.example,
-    azurerm_data_factory_dataset_sql_server_table.synapse_dataset
+resource "azurerm_data_factory_pipeline" "databricks_etl_cleaning" {
+  depends_on = [
+    azurerm_data_factory_dataset_azure_blob.datalake_raw_dataset 
   ]
 
-  name            = "databricks-etl-pipeline"
+  name            = "databricks-etl-cleaning"
   data_factory_id = azurerm_data_factory.example.id
 
   activities_json = jsonencode([
     {
-      "name": "TransformData",
+      "name": "TransformRawToProcessed",
       "type": "DatabricksNotebook",
       "inputs": [
-        { "name": "data-lake-dataset" }
+        { "name": "data-lake-raw-dataset" }  
       ],
       "outputs": [
-        { "name": "synapse-dataset" }
+        { "name": "data-lake-processed-dataset" }  
       ],
       "notebook_task": {
-        "notebook_path": "/Users/example@databricks.com/ETLNotebook"
+        "notebook_path": "/Users/example@databricks.com/CleaningNotebook"
       }
     }
   ])
 }
 
-# 46. Dataset for Azure Blob
-resource "azurerm_data_factory_dataset_azure_blob" "example" {
-  name                   = "example-blob-dataset"
-  data_factory_id        = azurerm_data_factory.example.id
-  linked_service_name    = azurerm_data_factory_linked_service_azure_blob_storage.blob_service_link.name
-  path                   = "example-folder/example-file.csv"
-}
+resource "azurerm_data_factory_pipeline" "databricks_etl_aggregation" {
+  depends_on = [
+    azurerm_data_factory_dataset_azure_blob.datalake_processed_dataset  
+  ]
 
-# 47. Dataset for SQL Server Table in Azure Data Factory
-resource "azurerm_data_factory_dataset_sql_server_table" "analytics_synapse_dataset" {
-  name                = "analytics-dataset"
-  data_factory_id     = azurerm_data_factory.example.id
-  linked_service_name = azurerm_data_factory_linked_service_sql_server.example.name
-  table_name          = "etl_output_table"
+  name            = "databricks-etl-aggregation"
+  data_factory_id = azurerm_data_factory.example.id
+
+  activities_json = jsonencode([
+    {
+      "name": "TransformProcessedToCurated",
+      "type": "DatabricksNotebook",
+      "inputs": [
+        { "name": "data-lake-processed-dataset" }  
+      ],
+      "outputs": [
+        { "name": "synapse-dataset" } 
+      ],
+      "notebook_task": {
+        "notebook_path": "/Users/example@databricks.com/AggregationNotebook"
+      }
+    }
+  ])
 }
 
 # 48. Dataset for Synapse SQL Table
@@ -307,28 +331,4 @@ resource "random_string" "suffix_processing" {
   length  = 6
   special = false
   upper   = false
-}
-
-
-resource "azurerm_data_factory_pipeline" "curated_to_synapse" {
-  depends_on = [
-    azurerm_data_factory_dataset_azure_blob.datalake_curated_dataset,
-    azurerm_data_factory_dataset_sql_server_table.synapse_curated_dataset
-  ]
-
-  name            = "curated-to-synapse"
-  data_factory_id = azurerm_data_factory.example.id
-
-  activities_json = jsonencode([
-    {
-      "name": "CopyCuratedDataToSynapse",
-      "type": "Copy",
-      "inputs": [
-        { "name": azurerm_data_factory_dataset_azure_blob.datalake_curated_dataset.name }
-      ],
-      "outputs": [
-        { "name": azurerm_data_factory_dataset_sql_server_table.synapse_curated_dataset.name }
-      ]
-    }
-  ])
 }

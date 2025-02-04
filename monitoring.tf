@@ -84,7 +84,7 @@ resource "azurerm_monitor_diagnostic_setting" "nsg_logs" {
 
 resource "azurerm_monitor_diagnostic_setting" "firewall_logs" {
   name                       = "firewall-diagnostics"
-  target_resource_id         = azurerm_firewall.firewall_project.id
+  target_resource_id         = azurerm_firewall.firewall.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.logs.id
 
   enabled_log {
@@ -152,20 +152,5 @@ resource "azurerm_monitor_metric_alert" "public_vm_cpu_alert" {
     aggregation      = "Average"
     operator         = "GreaterThan"
     threshold        = 80
-  }
-}
-
-# Enable logging for firewall
-resource "azurerm_monitor_diagnostic_setting" "firewall_logs" {
-  name                        = "Firewall-Logging"
-  target_resource_id          = azurerm_firewall.firewall.id
-  log_analytics_workspace_id  = azurerm_log_analytics_workspace.logs.id
-
-  enabled_log {
-    category = "AzureFirewallNetworkRule"
-  }
-
-  enabled_log {
-    category = "AzureFirewallApplicationRule"
   }
 }
