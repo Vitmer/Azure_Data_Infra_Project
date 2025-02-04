@@ -248,3 +248,4 @@ resource "azurerm_role_assignment" "storage_account_contributor" {
   role_definition_name = "Storage Account Contributor"
   principal_id         = var.service_principal_id
 }
+

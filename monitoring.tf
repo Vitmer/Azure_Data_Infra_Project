@@ -98,7 +98,7 @@ resource "azurerm_monitor_metric_alert" "private_vm_cpu_alert" {
 resource "azurerm_monitor_metric_alert" "public_vm_cpu_alert" {
   name                = "cpu-alert-public-vm"
   resource_group_name = azurerm_resource_group.rg.name
-  scopes              = [azurerm_linux_virtual_machine.public_vm.id]
+  scopes              = [azurerm_linux_virtual_machine_scale_set.public_vmss.id]
   description         = "Alert for high CPU usage on public VM"
   severity            = 2
   frequency           = "PT1M"
@@ -117,7 +117,7 @@ resource "azurerm_monitor_metric_alert" "public_vm_cpu_alert" {
 resource "azurerm_monitor_diagnostic_setting" "firewall_logs" {
   name                        = "Firewall-Logging"
   target_resource_id          = azurerm_firewall.firewall.id
-  log_analytics_workspace_id  = azurerm_log_analytics_workspace.example.id
+  log_analytics_workspace_id  = azurerm_log_analytics_workspace.logs.id
 
   enabled_log {
     category = "AzureFirewallNetworkRule"

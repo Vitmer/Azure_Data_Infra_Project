@@ -386,19 +386,24 @@ resource "azurerm_network_interface" "public_nic" {
   }
 }
 
-# 22. Virtual Machine in Public Subnet
-resource "azurerm_linux_virtual_machine" "public_vm" {
-  name                = "vm-public"
+# 22. Virtual Machine Scale Set (VMSS) for Public Subnet
+resource "azurerm_linux_virtual_machine_scale_set" "public_vmss" {
+  name                = "vmss-public"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  size                = "Standard_B1s"
+  sku                 = "Standard_B1s"
+  instances           = 6 
   admin_username      = "adminuser"
-  
-  depends_on = [azurerm_subnet_nat_gateway_association.private_nat_assoc]
 
-  network_interface_ids = [
-    azurerm_network_interface.public_nic.id
-  ]
+    network_interface {
+    name    = "public-nic"
+    primary = true
+    ip_configuration {
+      name      = "public-nic-ip-config"
+      subnet_id = azurerm_subnet.public.id
+      primary   = true
+    }
+  }
 
   admin_ssh_key {
     username   = "adminuser"
@@ -406,8 +411,8 @@ resource "azurerm_linux_virtual_machine" "public_vm" {
   }
 
   os_disk {
-    caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
+    caching              = "ReadWrite"
   }
 
   source_image_reference {
@@ -417,8 +422,10 @@ resource "azurerm_linux_virtual_machine" "public_vm" {
     version   = "latest"
   }
 
+  upgrade_mode = "Automatic"
+
   lifecycle {
-  prevent_destroy = false
+    prevent_destroy = false
   }
 }
 
@@ -458,9 +465,6 @@ resource "azurerm_linux_virtual_machine" "private_vm" {
   }
 }
 
-
-
-
 # 46. Backup Vault for Automatic Backups
 resource "azurerm_recovery_services_vault" "backup_vault" {
   name                = "backup-vault"
@@ -488,16 +492,6 @@ resource "azurerm_backup_policy_vm" "vm_backup_policy" {
   }
 }
 
-# 48. Protect Public VM with Backup
-resource "azurerm_backup_protected_vm" "protected_vm_public" {
-  resource_group_name       = azurerm_resource_group.rg.name
-  recovery_vault_name       = azurerm_recovery_services_vault.backup_vault.name
-  source_vm_id              = azurerm_linux_virtual_machine.public_vm.id
-  backup_policy_id          = azurerm_backup_policy_vm.vm_backup_policy.id
-
-  depends_on = [azurerm_backup_policy_vm.vm_backup_policy]
-}
-
 # 49. Protect Private VM with Backup
 resource "azurerm_backup_protected_vm" "protected_vm_private" {
   resource_group_name       = azurerm_resource_group.rg.name
@@ -506,6 +500,30 @@ resource "azurerm_backup_protected_vm" "protected_vm_private" {
   backup_policy_id          = azurerm_backup_policy_vm.vm_backup_policy.id
 
   depends_on = [azurerm_backup_policy_vm.vm_backup_policy]
+}
+
+# Backup Policy for VMSS
+resource "azurerm_backup_policy_vm" "vmss_backup_policy" {
+  name                = "vmss-backup-policy"
+  resource_group_name = azurerm_resource_group.rg.name
+  recovery_vault_name = azurerm_recovery_services_vault.backup_vault.name
+
+  backup {
+    frequency = "Daily"
+    time      = "23:00"
+  }
+
+  retention_daily {
+    count = 7
+  }
+}
+
+# Apply the backup policy to VMSS disks
+resource "azurerm_backup_protected_vm" "protected_vm_vmss" {
+  resource_group_name       = azurerm_resource_group.rg.name
+  recovery_vault_name       = azurerm_recovery_services_vault.backup_vault.name
+  source_vm_id              = azurerm_linux_virtual_machine_scale_set.public_vmss.id
+  backup_policy_id          = azurerm_backup_policy_vm.vmss_backup_policy.id
 }
 
 # 50. Enable public network access for the Databricks workspace

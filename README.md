@@ -218,10 +218,10 @@ The following diagram provides an overview of the project's architecture:
 
 ### 16. Virtual Machines
 57. azurerm_linux_virtual_machine.private_vm — create a private VM.
-58. azurerm_linux_virtual_machine.public_vm — create a public VM.
+58. azurerm_linux_virtual_machine_scale_set.public_vmss — create a public Virtual Machine Scale Set (VMSS).
 59. azurerm_backup_policy_vm.vm_backup_policy — create a backup policy for VMs.
 60. azurerm_backup_protected_vm.protected_vm_private — protect the private VM.
-61. azurerm_backup_protected_vm.protected_vm_public — protect the public VM.
+
 
 ---
 
