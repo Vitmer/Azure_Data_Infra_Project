@@ -562,7 +562,7 @@ resource "azurerm_virtual_network_gateway" "vpn_gateway" {
   vpn_type            = "RouteBased"
   enable_bgp          = false
   active_active       = false
-  sku                 = "VpnGw2"
+  sku                 = "Basic"
 
   ip_configuration {
     name                          = "vpn-gateway-ipconfig"
@@ -570,4 +570,4 @@ resource "azurerm_virtual_network_gateway" "vpn_gateway" {
     private_ip_address_allocation = "Dynamic"
     subnet_id                     = azurerm_subnet.gateway_subnet.id
   }
-}
+}2

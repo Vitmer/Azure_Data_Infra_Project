@@ -249,14 +249,14 @@ resource "azurerm_role_assignment" "storage_account_contributor" {
   principal_id         = var.service_principal_id
 }
 
-# Назначаем Data Factory доступ к Data Lake
+# Data Factory доступ к Data Lake
 resource "azurerm_role_assignment" "data_factory_storage_contributor" {
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_data_factory.example.identity[0].principal_id
 }
 
-# Назначаем Synapse доступ к Data Lake
+# Synapse доступ к Data Lake
 resource "azurerm_role_assignment" "synapse_storage_contributor" {
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Blob Data Contributor"
